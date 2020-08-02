@@ -1,0 +1,13 @@
+wheel
+parquery>=0.1.0
+pyzmq>=17.1.2
+redis>=3.5.3
+boto3>=1.14.32
+smart_open>=1.11.1
+netifaces>=0.10.9
+configobj>=5.0.6
+psutil>=5.7.2
+azure-storage-blob>=12.3.2
+pytest
+pytest-cov
+codacy-coverage
