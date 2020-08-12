@@ -14,6 +14,7 @@ import redis
 
 import parqueryd.config
 from parqueryd.worker import MoveparquetNode
+from parquery.write import df_to_parquet
 
 TEST_REDIS = 'redis://redis:6379/0'
 
@@ -61,7 +62,7 @@ def test_moveparquet(redis_server, tmpdir):
         data=np.random.rand(100, 10),
         columns=['col_{}'.format(i + 1) for i in range(10)])
     local_parquet = str(tmpdir.join('test_mover.parquet'))
-    ctable.fromdataframe(data_df, rootdir=local_parquet)
+    df_to_parquet(data_df, local_parquet)
 
     assert os.path.isdir(local_parquet)
 

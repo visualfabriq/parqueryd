@@ -7,12 +7,13 @@ import pandas as pd
 import pytest
 import redis
 from pandas.util.testing import assert_frame_equal
+from parquery.write import df_to_parquet
 
 import parqueryd.config
 from parqueryd.controller import ControllerNode
 from parqueryd.rpc import RPC
-from parqueryd.worker import WorkerNode, DownloaderNode, MoveparquetNode
 from parqueryd.util import get_my_ip
+from parqueryd.worker import WorkerNode, DownloaderNode
 
 TEST_REDIS = 'redis://redis:6379/0'
 NR_SHARDS = 5
@@ -51,7 +52,7 @@ def rpc(parquet_dir):
     sleep(5)
 
     worker = WorkerNode(redis_url=TEST_REDIS, loglevel=logging.DEBUG, data_dir=str(parquet_dir),
-                                  restart_check=False)
+                        restart_check=False)
     worker_thread = threading.Thread(target=worker.go)
     worker_thread.daemon = True
     worker_thread.start()
@@ -76,29 +77,21 @@ def rpc(parquet_dir):
 @pytest.fixture(scope='module')
 def shards(parquet_dir, taxi_df):
     single_parquet = str(parquet_dir.join('yellow_tripdata_2016-01.parquet'))
-    ct = ctable.fromdataframe(taxi_df, rootdir=single_parquet)
+    df_to_parquet(taxi_df, single_parquet)
 
-    step, remainder = divmod(len(ct), NR_SHARDS)
+    NR_SHARDS = 10
+    step = len(taxi_df) // NR_SHARDS
+    remainder = len(taxi_df) - step * NR_SHARDS
     count = 0
-    shards = [single_parquet]
+    for idx in range(0, len(taxi_df), step):
+        if count == NR_SHARDS - 1 and remainder >= 0:
+            step += remainder
+        elif count == NR_SHARDS:
+            break
 
-    for idx in range(0, len(ct), step):
-        print("Creating shard {}".format(count + 1))
-
-        if idx == len(ct) * (NR_SHARDS - 1):
-            step = step + remainder
-
-        shard_file = str(parquet_dir.join('tripdata_2016-01-%s.parquets' % count))
-        ct_shard = parquet.fromiter(
-            ct.iter(idx, idx + step),
-            ct.dtype,
-            step,
-            rootdir=shard_file,
-            mode='w'
-        )
+        shard_file = str(parquet_dir.join('tripdata_2016-01-%s.parquet' % count))
+        df_to_parquet(taxi_df[idx:idx + step], shard_file)
         shards.append(shard_file)
-
-        ct_shard.flush()
         count += 1
 
     yield shards

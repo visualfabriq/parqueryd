@@ -13,10 +13,10 @@ import numpy as np
 import pandas as pd
 import pytest
 import redis
+from parquery.write import df_to_parquet
 
 import parqueryd
 import parqueryd.config
-from parqueryd.util import get_my_ip
 from parqueryd.worker import DownloaderNode
 
 TEST_REDIS = 'redis://redis:6379/0'
@@ -101,23 +101,14 @@ def test_downloader(redis_server, downloader, tmpdir):
         data=np.random.rand(100, 10),
         columns=['col_{}'.format(i + 1) for i in range(10)])
     local_parquet = str(tmpdir.join('test_parquet'))
-    ctable.fromdataframe(data_df, rootdir=local_parquet)
+    df_to_parquet(data_df, local_parquet)
 
     assert os.path.isdir(local_parquet)
-
-    # Zip up the parquet directory and upload to S3
-    upload_dir = tmpdir.mkdir('upload')
-    zipfile_path = parqueryd.util.zip_to_file(local_parquet, str(upload_dir))[0]
-    assert os.path.isfile(zipfile_path)
-
-    upload_file = str(upload_dir.join('test.parquet'))
-    shutil.move(zipfile_path, upload_file)
-    assert os.path.isfile(upload_file)
 
     s3_conn = downloader._get_s3_conn()[-1]
 
     with clean_bucket(s3_conn, 'parquet') as bucket:
-        bucket.put_object(Key='test.parquet', Body=open(upload_file, 'rb'))
+        bucket.put_object(Key='test.parquet', Body=open(local_parquet, 'rb'))
 
         uploads = [key.key for key in bucket.objects.all()]
         assert uploads == ['test.parquet']
