@@ -67,22 +67,21 @@ cmdclass = {'build_ext': build_ext}
 
 optional_libs = ['numexpr>=2.6.9']
 install_requires = [
-    'parquery>=0.2.10',
-    'pyzmq>=17.1.2',
-    'redis>=3.0.1',
-    'boto3>=1.9.82',
-    'smart_open>=1.9.0',
+    'parquery>=0.1.0',
+    'pyzmq>=19.0.2',
+    'redis>=3.5.3',
+    'boto3>=1.14.32',
+    'smart_open>=1.15.0',
     'netifaces>=0.10.9',
     'configobj>=5.0.6',
-    'psutil>=5.0.0',
-    'azure-storage-blob==12.0.0',
+    'psutil>=5.7.2',
+    'azure-storage-blob>=12.3.2',
 ]
 setup_requires = []
 tests_requires = [
-    'pandas>=0.23.1',
-    'pytest>=4.0.0',
-    'pytest-cov>=2.6.0',
-    'codacy-coverage>=1.3.7',
+    'pytest>=6.0.1',
+    'pytest-cov>=2.10.0',
+    'codacy-coverage>=1.3.11',
 ]
 extras_requires = []
 ext_modules = []
