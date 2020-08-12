@@ -1,11 +1,9 @@
 from __future__ import absolute_import
 
 ########################################################################
-#       File based on https://github.com/Blosc/parquet
-########################################################################
 #
-# License: BSD
-# Created: October 5, 2015
+# License: MIT
+# Created: August 8, 2020
 #       Author:  Carst Vaartjes - cvaartjes@visualfabriq.com
 #
 ########################################################################
@@ -102,7 +100,9 @@ classifiers = [
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
-    ]
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+]
 
 setup(
     name="parqueryd",
