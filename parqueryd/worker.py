@@ -17,14 +17,13 @@ from ssl import SSLError
 
 import boto3
 import parquery
-import parquet
 import psutil
 import redis
 import smart_open
 import zmq
 from azure.storage.blob import BlobClient
 
-import parqueryd
+import parqueryd.config
 from parqueryd.messages import msg_factory, WorkerRegisterMessage, ErrorMessage, BusyMessage, StopMessage, \
     DoneMessage, TicketDoneMessage
 from parqueryd.tool import rm_file_or_dir
@@ -37,11 +36,10 @@ POLLING_TIMEOUT = 5000
 WRM_DELAY = 20
 MAX_MEMORY_KB = 2 * (2 ** 20)  # Max memory of 2GB, in Kilobytes
 DOWNLOAD_DELAY = 5  # how often in seconds to check for downloads
-parquet.set_nthreads(1)
 
 
 class WorkerBase(object):
-    def __init__(self, data_dir=parqueryd.DEFAULT_DATA_DIR, redis_url='redis://127.0.0.1:6379/0',
+    def __init__(self, data_dir=parqueryd.config.DEFAULT_DATA_DIR, redis_url='redis://127.0.0.1:6379/0',
                  loglevel=logging.DEBUG,
                  restart_check=True, azure_conn_string=None):
         if not os.path.exists(data_dir) or not os.path.isdir(data_dir):
@@ -90,7 +88,7 @@ class WorkerBase(object):
     def check_controllers(self):
         # Check the Redis set of controllers to see if any new ones have appeared,
         # Also register with them if so.
-        listed_controllers = list(self.redis_server.smembers(parqueryd.REDIS_SET_KEY))
+        listed_controllers = list(self.redis_server.smembers(parqueryd.config.REDIS_SET_KEY))
         current_controllers = []
         new_controllers = []
         for k in self.controllers.keys()[:]:
@@ -317,11 +315,11 @@ class DownloaderNode(WorkerBase):
         # when called from rpc.download(filenames=[...]
 
         self.last_download_check = time.time()
-        tickets = self.redis_server.keys(parqueryd.REDIS_TICKET_KEY_PREFIX + '*')
+        tickets = self.redis_server.keys(parqueryd.config.REDIS_TICKET_KEY_PREFIX + '*')
 
         for ticket_w_prefix in tickets:
             ticket_details = self.redis_server.hgetall(ticket_w_prefix)
-            ticket = ticket_w_prefix[len(parqueryd.REDIS_TICKET_KEY_PREFIX):]
+            ticket = ticket_w_prefix[len(parqueryd.config.REDIS_TICKET_KEY_PREFIX):]
 
             ticket_details_items = [(k, v) for k, v in ticket_details.items()]
             random.shuffle(ticket_details_items)
@@ -349,8 +347,8 @@ class DownloaderNode(WorkerBase):
 
                 try:
                     # acquire a lock for this node_filename
-                    lock_key = parqueryd.REDIS_DOWNLOAD_LOCK_PREFIX + self.node_name + ticket + filename
-                    lock = self.redis_server.lock(lock_key, timeout=parqueryd.REDIS_DOWNLOAD_LOCK_DURATION)
+                    lock_key = parqueryd.config.REDIS_DOWNLOAD_LOCK_PREFIX + self.node_name + ticket + filename
+                    lock = self.redis_server.lock(lock_key, timeout=parqueryd.config.REDIS_DOWNLOAD_LOCK_DURATION)
                     if lock.acquire(False):
                         self.download_file(ticket, filename)
                         break  # break out of the loop so we don't end up staying in a large loop for giant tickets
@@ -369,16 +367,16 @@ class DownloaderNode(WorkerBase):
         node_filename_slot = '%s_%s' % (self.node_name, filename)
         # Check to see if the progress slot exists at all, if it does not exist this ticket has been cancelled
         # by some kind of intervention, stop the download and clean up.
-        tmp = self.redis_server.hget(parqueryd.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot)
+        tmp = self.redis_server.hget(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot)
         if not tmp:
             # Clean up the whole ticket contents from disk
-            ticket_path = os.path.join(parqueryd.INCOMING, ticket)
+            ticket_path = os.path.join(parqueryd.config.INCOMING, ticket)
             self.logger.debug('Now removing entire ticket %s', ticket_path)
             shutil.rmtree(ticket_path, ignore_errors=True)
             raise Exception("Ticket %s progress slot %s not found, aborting download" % (ticket, node_filename_slot))
         # A progress slot contains a timestamp_filesize
         progress_slot = '%s_%s' % (time.time(), progress)
-        self.redis_server.hset(parqueryd.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot, progress_slot)
+        self.redis_server.hset(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot, progress_slot)
 
     def _get_transport_params(self):
         return {}
@@ -393,14 +391,14 @@ class DownloaderNode(WorkerBase):
         tmp = fileurl.replace('s3://', '').split('/')
         bucket = tmp[0]
         filename = '/'.join(tmp[1:])
-        ticket_path = os.path.join(parqueryd.INCOMING, ticket)
+        ticket_path = os.path.join(parqueryd.config.INCOMING, ticket)
         if not os.path.exists(ticket_path):
             try:
                 os.makedirs(ticket_path)
             except OSError as ose:
                 if ose == errno.EEXIST:
                     pass  # different processes might try to create the same directory at _just_ the same time causing the previous check to fail
-        temp_path = os.path.join(parqueryd.INCOMING, ticket, filename)
+        temp_path = os.path.join(parqueryd.config.INCOMING, ticket, filename)
 
         if os.path.exists(temp_path):
             self.logger.info("%s exists, skipping download" % temp_path)
@@ -415,7 +413,7 @@ class DownloaderNode(WorkerBase):
             key = 's3://{}:{}@{}/{}'.format(access_key, secret_key, bucket, filename)
 
             try:
-                fd, tmp_filename = tempfile.mkstemp(dir=parqueryd.INCOMING)
+                fd, tmp_filename = tempfile.mkstemp(dir=parqueryd.config.INCOMING)
 
                 # See: https://github.com/RaRe-Technologies/smart_open/commit/a751b7575bfc5cc277ae176cecc46dbb109e47a4
                 # Sometime we get timeout errors on the SSL connections
@@ -470,14 +468,14 @@ class DownloaderNode(WorkerBase):
         tmp = fileurl.replace('azure://', '').split('/')
         container_name = tmp[0]
         blob_name = tmp[1]
-        ticket_path = os.path.join(parqueryd.INCOMING, ticket)
+        ticket_path = os.path.join(parqueryd.config.INCOMING, ticket)
         if not os.path.exists(ticket_path):
             try:
                 os.makedirs(ticket_path)
             except OSError as ose:
                 if ose == errno.EEXIST:
                     pass  # different processes might try to create the same directory at _just_ the same time causing the previous check to fail
-        temp_path = os.path.join(parqueryd.INCOMING, ticket, blob_name)
+        temp_path = os.path.join(parqueryd.config.INCOMING, ticket, blob_name)
 
         if os.path.exists(temp_path):
             self.logger.info("%s exists, skipping download" % temp_path)
@@ -488,7 +486,7 @@ class DownloaderNode(WorkerBase):
 
             # Download blob
             try:
-                fd, tmp_filename = tempfile.mkstemp(dir=parqueryd.INCOMING)
+                fd, tmp_filename = tempfile.mkstemp(dir=parqueryd.config.INCOMING)
                 blob_client = BlobClient.from_connection_string(
                     conn_str=self.azure_conn_string, container_name=container_name, blob_name=blob_name
                 )
@@ -509,10 +507,10 @@ class DownloaderNode(WorkerBase):
         # Remove all Redis entries for this node and ticket
         # it can't be done per file as we don't have the bucket name from which a file was downloaded
         self.logger.debug('Removing ticket %s from redis', ticket)
-        for node_filename_slot in self.redis_server.hgetall(parqueryd.REDIS_TICKET_KEY_PREFIX + ticket):
+        for node_filename_slot in self.redis_server.hgetall(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket):
             if node_filename_slot.startswith(self.node_name):
                 self.logger.debug('Removing ticket_%s %s', ticket, node_filename_slot)
-                self.redis_server.hdel(parqueryd.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot)
+                self.redis_server.hdel(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot)
         tdm = TicketDoneMessage({'ticket': ticket})
         self.send_to_all(tdm)
 
@@ -523,10 +521,10 @@ class MoveparquetNode(DownloaderNode):
     def moveparquet(self, ticket):
         # A notification from the controller that all files are downloaded on all nodes,
         # the files in this ticket can be moved into place
-        ticket_path = os.path.join(parqueryd.INCOMING, ticket)
+        ticket_path = os.path.join(parqueryd.config.INCOMING, ticket)
         if os.path.exists(ticket_path):
             for filename in os.listdir(ticket_path):
-                prod_path = os.path.join(parqueryd.DEFAULT_DATA_DIR, filename)
+                prod_path = os.path.join(parqueryd.config.DEFAULT_DATA_DIR, filename)
                 if os.path.exists(prod_path):
                     shutil.rmtree(prod_path, ignore_errors=True)
                 ready_path = os.path.join(ticket_path, filename)
@@ -546,11 +544,11 @@ class MoveparquetNode(DownloaderNode):
         # only if ALL the nodes are _DONE downloading, move the parquet files in this ticket into place.
 
         self.last_download_check = time.time()
-        tickets = self.redis_server.keys(parqueryd.REDIS_TICKET_KEY_PREFIX + '*')
+        tickets = self.redis_server.keys(parqueryd.config.REDIS_TICKET_KEY_PREFIX + '*')
 
         for ticket_w_prefix in tickets:
             ticket_details = self.redis_server.hgetall(ticket_w_prefix)
-            ticket = ticket_w_prefix[len(parqueryd.REDIS_TICKET_KEY_PREFIX):]
+            ticket = ticket_w_prefix[len(parqueryd.config.REDIS_TICKET_KEY_PREFIX):]
 
             in_progress_count = 0
             ticket_details_items = ticket_details.items()

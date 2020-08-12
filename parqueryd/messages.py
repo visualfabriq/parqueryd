@@ -1,4 +1,4 @@
-import cPickle
+import pickle
 import json
 import time
 
@@ -48,12 +48,12 @@ class Message(dict):
         return False
 
     def add_as_binary(self, key, value):
-        self[key] = cPickle.dumps(value).encode('base64')
+        self[key] = pickle.dumps(value).encode('base64')
 
     def get_from_binary(self, key, default=None):
         buf = self.get(key)
         if not buf: return default
-        return cPickle.loads(buf.decode('base64'))
+        return pickle.loads(buf.decode('base64'))
 
     def to_json(self):
         # We could do some serializiation fixes in here for things like datetime or other binary non-json-serializabe members

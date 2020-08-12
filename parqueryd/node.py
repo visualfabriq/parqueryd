@@ -4,13 +4,12 @@ import sys
 
 import configobj
 
-import parqueryd
+import parqueryd.config
+from parqueryd.controller import ControllerNode
+from parqueryd.rpc import RPC
+from parqueryd.worker import WorkerNode, DownloaderNode, MoveparquetNode
 
-if os.path.exists('/etc/parqueryd.cfg'):
-    config = configobj.ConfigObj('/etc/parqueryd.cfg')
-else:
-    # fallback for migrated bqueryd instances
-    config = configobj.ConfigObj('/etc/bqueryd.cfg')
+config = configobj.ConfigObj('/etc/parqueryd.cfg')
 
 redis_url = config.get('redis_url', 'redis://127.0.0.1:6379/0')
 azure_conn_string = config.get('azure_conn_string', None)
@@ -26,24 +25,24 @@ def main(argv=sys.argv):
     else:
         loglevel = logging.ERROR
 
-    data_dir = parqueryd.DEFAULT_DATA_DIR
+    data_dir = parqueryd.config.DEFAULT_DATA_DIR
     for arg in argv:
         if arg.startswith('--data_dir='):
             data_dir = arg[11:]
 
     if 'controller' in argv:
-        parqueryd.ControllerNode(redis_url=redis_url, loglevel=loglevel, azure_conn_string=azure_conn_string).go()
+        ControllerNode(redis_url=redis_url, loglevel=loglevel, azure_conn_string=azure_conn_string).go()
     elif 'worker' in argv:
-        parqueryd.WorkerNode(redis_url=redis_url, loglevel=loglevel, data_dir=data_dir).go()
+        WorkerNode(redis_url=redis_url, loglevel=loglevel, data_dir=data_dir).go()
     elif 'downloader' in argv:
-        parqueryd.DownloaderNode(redis_url=redis_url, loglevel=loglevel, azure_conn_string=azure_conn_string).go()
+        DownloaderNode(redis_url=redis_url, loglevel=loglevel, azure_conn_string=azure_conn_string).go()
     elif 'moveparquet' in argv:
-        parqueryd.MoveparquetNode(redis_url=redis_url, loglevel=loglevel).go()
+        MoveparquetNode(redis_url=redis_url, loglevel=loglevel).go()
     else:
         if len(argv) > 1 and argv[1].startswith('tcp:'):
-            rpc = parqueryd.RPC(address=argv[1], redis_url=redis_url, loglevel=loglevel)
+            rpc = RPC(address=argv[1], redis_url=redis_url, loglevel=loglevel)
         else:
-            rpc = parqueryd.RPC(redis_url=redis_url, loglevel=loglevel)
+            rpc = RPC(redis_url=redis_url, loglevel=loglevel)
         import IPython
         IPython.embed()
 

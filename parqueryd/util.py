@@ -1,5 +1,4 @@
 import binascii
-import netifaces
 import os
 import random
 import shutil
@@ -7,6 +6,7 @@ import tempfile
 import time
 import zipfile
 
+import netifaces
 import zmq
 
 
@@ -19,7 +19,7 @@ def get_my_ip():
         ifname = eth_interfaces[-1]
     for x in netifaces.ifaddresses(ifname)[netifaces.AF_INET]:
         # Return first addr found
-        return str(x['addr'])
+        return x['addr']
 
 
 def bind_to_random_port(socket, addr, min_port=49152, max_port=65536, max_tries=100):
@@ -27,8 +27,8 @@ def bind_to_random_port(socket, addr, min_port=49152, max_port=65536, max_tries=
     for i in range(max_tries):
         try:
             port = random.randrange(min_port, max_port)
-            socket.identity = '%s:%s' % (addr, port)
-            socket.bind('tcp://*:%s' % port)
+            socket.identity = str.encode('%s:%s' % (addr, port))
+            socket.bind(str.encode('tcp://*:%s' % port))
             # socket.bind('%s:%s' % (addr, port))
         except zmq.ZMQError as exception:
             en = exception.errno
@@ -91,8 +91,8 @@ def show_workers(info_data, only_busy=False):
     for w in info_data.get('workers', {}).values():
         nodes.setdefault(w['node'], []).append(w)
     for k, n in nodes.items():
-        print k
+        print(k)
         for nn in n:
             if only_busy and not nn.get('busy'):
                 continue
-            print '   ', time.ctime(nn['last_seen']), nn.get('busy')
+            print('   ', time.ctime(nn['last_seen']), nn.get('busy'))

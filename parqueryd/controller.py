@@ -12,6 +12,7 @@ import redis
 import zmq
 
 import parqueryd
+import parqueryd.config
 from parqueryd.messages import msg_factory, Message, WorkerRegisterMessage, ErrorMessage, \
     BusyMessage, DoneMessage, StopMessage, TicketDoneMessage
 from parqueryd.tool import rm_file_or_dir
@@ -38,8 +39,8 @@ class ControllerNode(object):
         self.poller.register(self.socket, zmq.POLLIN | zmq.POLLOUT)
 
         self.node_name = socket.gethostname()
-        self.address = bind_to_random_port(self.socket, 'tcp://' + get_my_ip(), min_port=14300, max_port=14399,
-                                           max_tries=100)
+        self.address = bind_to_random_port(self.socket, 'tcp://' + get_my_ip(),
+                                           min_port=14300, max_port=14399, max_tries=100).decode()
         with open(os.path.join(RUNFILES_LOCATION, 'parqueryd_controller.address'), 'w') as F:
             F.write(self.address)
         with open(os.path.join(RUNFILES_LOCATION, 'parqueryd_controller.pid'), 'w') as F:
@@ -76,9 +77,9 @@ class ControllerNode(object):
 
     def connect_to_others(self):
         # Make sure own address is still registered
-        self.redis_server.sadd(parqueryd.REDIS_SET_KEY, self.address)
+        self.redis_server.sadd(parqueryd.config.REDIS_SET_KEY, self.address)
         # get list of other running controllers and connect to them
-        all_servers = self.redis_server.smembers(parqueryd.REDIS_SET_KEY)
+        all_servers = self.redis_server.smembers(parqueryd.config.REDIS_SET_KEY)
         all_servers.remove(self.address)
         # Connect to new other controllers we don't know about yet
         for x in all_servers:
@@ -93,7 +94,7 @@ class ControllerNode(object):
                     self.socket.send_multipart([x, msg.to_json()])
                 except zmq.error.ZMQError as e:
                     self.logger.critical('Removing %s due to %s' % (x, e))
-                    self.redis_server.srem(parqueryd.REDIS_SET_KEY, x)
+                    self.redis_server.srem(parqueryd.config.REDIS_SET_KEY, x)
                     del self.others[x]
         # Disconnect from controllers not in current set
         for x in self.others.keys()[:]:  # iterate over a copy of keys so we can remove entries
@@ -459,7 +460,7 @@ class ControllerNode(object):
                 progress_slot = '%s_%s' % (
                 time.time() - 60, -1)  # give the slot a timestamp of now -1 minute so we can see when it was created
                 node_filename_slot = '%s_%s' % (node, filename)
-                self.redis_server.hset(parqueryd.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot, progress_slot)
+                self.redis_server.hset(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot, progress_slot)
 
         if wait:
             msg.add_as_binary('result', ticket)
@@ -517,7 +518,7 @@ class ControllerNode(object):
 
     def kill(self):
         # unregister with the Redis set
-        self.redis_server.srem(parqueryd.REDIS_SET_KEY, self.address)
+        self.redis_server.srem(parqueryd.config.REDIS_SET_KEY, self.address)
         self.is_running = False
         return 'harakiri...'
 

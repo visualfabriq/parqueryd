@@ -16,40 +16,32 @@ As a start we need some interesting data, that is reasonably large in size. Down
     cd parqueryd_getting_started
     . bin/activate
     wget https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2016-01.csv
-    pip install parqueryd pandas
+    pip install parqueryd 
 
 We are only downloading the data for one month, a more interesting test is of course download the data for an entire year. But this is a good start. The data for one month is already 10 million records.
 
 Run ipython, and let's convert the CSV file to a parquet file.
 
-
-    import parquet
+    from parquery.write import df_to_parquet
     import pandas as pd
     data = pd.read_csv('yellow_tripdata_2016-01.csv',  parse_dates=['tpep_pickup_datetime', 'tpep_dropoff_datetime'])
-    ct = parquet.ctable.fromdataframe(data, rootdir='tripdata_2016-01.parquet')
+    df_to_parquet(data, 'tripdata_2016-01.parquet')
 
 Now we have a parquet file on disk that can be queried using [parquery](https://github.com/visualfabriq/parquery/). But we also want to show how to use the distributed functionality  of parqueryd, so we split the file that we have just created into some smaller chunks.
 
-    import parquet, parquery
-    ct = parquery.open(rootdir='tripdata_2016-01.parquet')
     NR_SHARDS = 10
-    step = len(ct) / NR_SHARDS
-    remainder = len(ct) % NR_SHARDS
+    step = len(data) // NR_SHARDS
+    remainder = len(data) - step * NR_SHARDS
     count = 0
-    for idx in range(0, len(ct), step):
-        if idx == len(ct)*(NR_SHARDS-1):
-            step = step + remainder
-        print 'Creating file tripdata_2016-01-%s.parquets'%count
-        ct_shard = parquet.fromiter(
-            ct.iter(idx, idx+step),
-            ct.dtype,
-            step,
-            rootdir='tripdata_2016-01-%s.parquets'%count,
-            mode='w'
-        )
-        ct_shard.flush()
+    for idx in range(0, len(data), step):
+        if count == NR_SHARDS - 1 and remainder >= 0:
+            step += remainder
+        elif count == NR_SHARDS:
+            break
+        print('Creating file tripdata_2016-01-%s.parquet'%count)
+        df_to_parquet(data[idx:idx+step], 'tripdata_2016-01-%s.parquet'%count)
         count += 1
-
+        
 ## Running parqueryd
 
 Now to test using parqueryd. If the parqueryd was successfully installed using pip, and your virtualenvironment is activated, you should now have a script named ```parqueryd``` on your path. You can start up a controller. Before starting parqueryd, also make sure that you have a locally running [Redis](https://redis.io/) server.

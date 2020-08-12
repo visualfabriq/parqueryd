@@ -1,19 +1,19 @@
 import logging
 import os
+import shutil
+import socket
+import threading
+import time
+from time import sleep
+from uuid import uuid4
 
 import numpy as np
 import pandas as pd
 import pytest
 import redis
-import shutil
-import socket
-import threading
-import time
-from parquery import ctable
-from time import sleep
-from uuid import uuid4
 
-import parqueryd
+import parqueryd.config
+from parqueryd.worker import MoveparquetNode
 
 TEST_REDIS = 'redis://redis:6379/0'
 
@@ -32,15 +32,15 @@ def redis_server():
 
 @pytest.fixture
 def clear_dirs():
-    if os.path.isdir(parqueryd.INCOMING):
-        shutil.rmtree(parqueryd.INCOMING)
-    if os.path.isdir(parqueryd.DEFAULT_DATA_DIR):
-        shutil.rmtree(parqueryd.DEFAULT_DATA_DIR)
+    if os.path.isdir(parqueryd.config.INCOMING):
+        shutil.rmtree(parqueryd.config.INCOMING)
+    if os.path.isdir(parqueryd.config.DEFAULT_DATA_DIR):
+        shutil.rmtree(parqueryd.config.DEFAULT_DATA_DIR)
 
 
 @pytest.fixture
 def mover():
-    mover = parqueryd.MoveparquetNode(redis_url=TEST_REDIS, loglevel=logging.DEBUG)
+    mover = MoveparquetNode(redis_url=TEST_REDIS, loglevel=logging.DEBUG)
     mover_thread = threading.Thread(target=mover.go)
     mover_thread.daemon = True
     mover_thread.start()
@@ -59,7 +59,7 @@ def test_moveparquet(redis_server, tmpdir):
     # Make a parquet from a pandas DataFrame
     data_df = pd.DataFrame(
         data=np.random.rand(100, 10),
-        columns=['col_{}'.format(i+1) for i in range(10)])
+        columns=['col_{}'.format(i + 1) for i in range(10)])
     local_parquet = str(tmpdir.join('test_mover.parquet'))
     ctable.fromdataframe(data_df, rootdir=local_parquet)
 
@@ -67,21 +67,21 @@ def test_moveparquet(redis_server, tmpdir):
 
     # copy the parquet directory to bqueyd.INCOMING
     ticket = str(uuid4())
-    ticket_dir = os.path.join(parqueryd.INCOMING, ticket, 'test_mover.parquet')
+    ticket_dir = os.path.join(parqueryd.config.INCOMING, ticket, 'test_mover.parquet')
     shutil.copytree(local_parquet, ticket_dir)
 
     # Construct the redis entry that before downloading
     progress_slot = '%s_%s' % (time.time() - 60, -1)
     node_filename_slot = '%s_%s' % (socket.gethostname(), 's3://parquet/test_mover.parquet')
 
-    redis_server.hset(parqueryd.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot, progress_slot)
+    redis_server.hset(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot, progress_slot)
 
     # wait for some time
     sleep(5)
 
     # At this stage, we don't expect the parquet directory to be moved to parqueryd.DEFAULT_DATA_DIR, because the progress
     # slot has not been updated yet
-    files_in_default_data_dir = os.listdir(parqueryd.DEFAULT_DATA_DIR)
+    files_in_default_data_dir = os.listdir(parqueryd.config.DEFAULT_DATA_DIR)
     files_in_default_data_dir.sort()
     assert files_in_default_data_dir == ['incoming']
     # ticket_dir still exists
@@ -89,11 +89,11 @@ def test_moveparquet(redis_server, tmpdir):
 
     # Now update progress slot
     new_progress_slot = '%s_%s' % (time.time(), 'DONE')
-    redis_server.hset(parqueryd.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot, new_progress_slot)
+    redis_server.hset(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot, new_progress_slot)
 
     # Sleep again
     sleep(5)
-    files_in_default_data_dir = os.listdir(parqueryd.DEFAULT_DATA_DIR)
+    files_in_default_data_dir = os.listdir(parqueryd.config.DEFAULT_DATA_DIR)
     files_in_default_data_dir.sort()
     assert files_in_default_data_dir == ['incoming', 'test_mover.parquet']
     # ticket_dir should have been deleted.

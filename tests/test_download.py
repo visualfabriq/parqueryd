@@ -1,28 +1,30 @@
 import logging
 import os
+import shutil
+import socket
+import threading
+import time
 from contextlib import contextmanager
+from time import sleep
+from uuid import uuid4
 
 import boto3
 import numpy as np
 import pandas as pd
 import pytest
 import redis
-import shutil
-import socket
-import threading
-import time
-from parquet import ctable
-from time import sleep
-from uuid import uuid4
 
 import parqueryd
+import parqueryd.config
+from parqueryd.util import get_my_ip
+from parqueryd.worker import DownloaderNode
 
 TEST_REDIS = 'redis://redis:6379/0'
 FAKE_ACCESS_KEY = 'fake access key'
 FAKE_SECRET_KEY = 'fake secret key'
 
 
-class LocalS3Downloader(parqueryd.DownloaderNode):
+class LocalS3Downloader(DownloaderNode):
     """Extend ``parqueryd.DownloaderNode`` to return an S3 Resource connected to local (test) S3."""
 
     def __init__(self, *args, **kwargs):
@@ -59,8 +61,8 @@ def redis_server():
 
 @pytest.fixture
 def clear_incoming():
-    if os.path.isdir(parqueryd.INCOMING):
-        shutil.rmtree(parqueryd.INCOMING)
+    if os.path.isdir(parqueryd.config.INCOMING):
+        shutil.rmtree(parqueryd.config.INCOMING)
 
 
 @pytest.fixture
@@ -97,7 +99,7 @@ def test_downloader(redis_server, downloader, tmpdir):
     # Make a parquet from a pandas DataFrame
     data_df = pd.DataFrame(
         data=np.random.rand(100, 10),
-        columns=['col_{}'.format(i+1) for i in range(10)])
+        columns=['col_{}'.format(i + 1) for i in range(10)])
     local_parquet = str(tmpdir.join('test_parquet'))
     ctable.fromdataframe(data_df, rootdir=local_parquet)
 
@@ -125,10 +127,10 @@ def test_downloader(redis_server, downloader, tmpdir):
         node_filename_slot = '%s_%s' % (socket.gethostname(), 's3://parquet/test.parquet')
         ticket = str(uuid4())
 
-        incoming_dir = os.path.join(parqueryd.INCOMING, ticket)
+        incoming_dir = os.path.join(parqueryd.config.INCOMING, ticket)
         assert not os.path.isdir(incoming_dir)
 
-        redis_server.hset(parqueryd.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot, progress_slot)
+        redis_server.hset(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot, progress_slot)
 
         # wait for the downloader to catch up
         sleep(10)
@@ -137,7 +139,7 @@ def test_downloader(redis_server, downloader, tmpdir):
         assert os.listdir(incoming_dir) == ['test.parquet']
 
         # Check that the progress slot has been updated
-        updated_slot = redis_server.hget(parqueryd.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot)
+        updated_slot = redis_server.hget(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot)
         assert updated_slot.split('_')[-1] == 'DONE'
 
 

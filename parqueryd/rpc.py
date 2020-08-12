@@ -11,16 +11,15 @@ from tarfile import TarFile, TarError
 import redis
 import zmq
 
-import parqueryd
+import parqueryd.config
 from parqueryd.messages import msg_factory, RPCMessage, ErrorMessage
 
 try:
     from cStringIO import StringIO
 except ImportError:
-    from StringIO import StringIO
+    from io import StringIO
 import glob
 import pandas as pd
-from parquery import aggregate
 from parqueryd.tool import rm_file_or_dir
 
 
@@ -44,9 +43,9 @@ class RPC(object):
 
         if not address:
             # Bind to a random controller
-            controllers = list(redis_server.smembers(parqueryd.REDIS_SET_KEY))
+            controllers = list(redis_server.smembers(parqueryd.config.REDIS_SET_KEY))
             if len(controllers) < 1:
-                raise Exception('No Controllers found in Redis set: ' + parqueryd.REDIS_SET_KEY)
+                raise Exception('No Controllers found in Redis set: ' + parqueryd.config.REDIS_SET_KEY)
             random.shuffle(controllers)
         else:
             controllers = [address]
@@ -180,7 +179,7 @@ class RPC(object):
 
     def get_download_data(self):
         redis_server = redis.from_url(self.redis_url)
-        tickets = set(redis_server.keys(parqueryd.REDIS_TICKET_KEY_PREFIX + '*'))
+        tickets = set(redis_server.keys(parqueryd.config.REDIS_TICKET_KEY_PREFIX + '*'))
         data = {}
         for ticket in tickets:
             tmp = redis_server.hgetall(ticket)

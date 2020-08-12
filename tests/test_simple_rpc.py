@@ -1,17 +1,17 @@
 import logging
 import os
-import socket
+import threading
+from time import sleep
 
-import parquet
 import pandas as pd
 import pytest
 import redis
-import threading
-from parquet import ctable
 from pandas.util.testing import assert_frame_equal
-from time import sleep
 
-import parqueryd
+import parqueryd.config
+from parqueryd.controller import ControllerNode
+from parqueryd.rpc import RPC
+from parqueryd.worker import WorkerNode, DownloaderNode, MoveparquetNode
 from parqueryd.util import get_my_ip
 
 TEST_REDIS = 'redis://redis:6379/0'
@@ -33,7 +33,7 @@ def parquet_dir(request, tmpdir_factory):
     return tmpdir_factory.mktemp(request.module.__name__)
 
 
-class DummyDownloader(parqueryd.DownloaderNode):
+class DummyDownloader(DownloaderNode):
 
     def download_file(self, ticket, filename):
         self.file_downloader_progress(ticket, filename, 'DONE')
@@ -43,14 +43,14 @@ class DummyDownloader(parqueryd.DownloaderNode):
 def rpc(parquet_dir):
     redis_server = redis.from_url(TEST_REDIS)
     redis_server.flushdb()
-    controller = parqueryd.ControllerNode(redis_url=TEST_REDIS, loglevel=logging.DEBUG)
+    controller = ControllerNode(redis_url=TEST_REDIS, loglevel=logging.DEBUG)
     controller_thread = threading.Thread(target=controller.go)
     controller_thread.daemon = True
     controller_thread.start()
     # Sleep 5 seconds, just to make sure all connections are properly established
     sleep(5)
 
-    worker = parqueryd.WorkerNode(redis_url=TEST_REDIS, loglevel=logging.DEBUG, data_dir=str(parquet_dir),
+    worker = WorkerNode(redis_url=TEST_REDIS, loglevel=logging.DEBUG, data_dir=str(parquet_dir),
                                   restart_check=False)
     worker_thread = threading.Thread(target=worker.go)
     worker_thread.daemon = True
@@ -64,7 +64,7 @@ def rpc(parquet_dir):
     downloader_thread.start()
     sleep(5)
 
-    rpc = parqueryd.RPC(timeout=100, redis_url=TEST_REDIS, loglevel=logging.DEBUG)
+    rpc = parqueryd.rpc.RPC(timeout=100, redis_url=TEST_REDIS, loglevel=logging.DEBUG)
     yield rpc
 
     # shutdown the controller and worker
@@ -83,7 +83,7 @@ def shards(parquet_dir, taxi_df):
     shards = [single_parquet]
 
     for idx in range(0, len(ct), step):
-        print("Creating shard {}".format(count+1))
+        print("Creating shard {}".format(count + 1))
 
         if idx == len(ct) * (NR_SHARDS - 1):
             step = step + remainder
@@ -127,7 +127,7 @@ def test_rpc_info(rpc):
 def test_download(rpc):
     ticket_nr = rpc.download(filenames=['test_download.parquet'], bucket='parquet', wait=False)
     redis_server = redis.from_url(TEST_REDIS)
-    download_entries = redis_server.hgetall(parqueryd.REDIS_TICKET_KEY_PREFIX + ticket_nr)
+    download_entries = redis_server.hgetall(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket_nr)
     assert len(download_entries) == 1
     for key, value in download_entries.items():
         # filename
