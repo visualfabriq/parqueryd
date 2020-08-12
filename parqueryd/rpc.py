@@ -89,8 +89,8 @@ class RPC(object):
                 params['args'] = args
             if kwargs:
                 params['kwargs'] = kwargs
+
             # We do not want string args to be converted into unicode by the JSON machinery
-            # parquery ctable does not like col names to be unicode for example
             msg = RPCMessage({'payload': name})
             msg.add_as_binary('params', params)
             rep = None

@@ -2,8 +2,8 @@ wheel
 parquery>=0.1.2
 pyzmq>=19.0.2
 redis>=3.5.3
-boto3>=1.14.32
-smart_open>=1.15.0
+boto3>=1.14.40
+smart_open>=1.11.1
 netifaces>=0.10.9
 configobj>=5.0.6
 psutil>=5.7.2
