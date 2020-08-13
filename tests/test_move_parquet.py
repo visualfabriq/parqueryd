@@ -64,7 +64,7 @@ def test_moveparquet(redis_server, tmpdir):
     local_parquet = str(tmpdir.join('test_mover.parquet'))
     df_to_parquet(data_df, local_parquet)
 
-    assert os.path.isdir(local_parquet)
+    assert os.path.exists(local_parquet)
 
     # copy the parquet directory to bqueyd.INCOMING
     ticket = str(uuid4())

@@ -25,8 +25,8 @@ def bind_to_random_port(socket, addr, min_port=49152, max_port=65536, max_tries=
     for i in range(max_tries):
         try:
             port = random.randrange(min_port, max_port)
-            socket.identity = str.encode('%s:%s' % (addr, port))
-            socket.bind(str.encode('tcp://*:%s' % port))
+            socket.identity = bytes(('%s:%s' % (addr, port)).encode("utf-8"))
+            socket.bind(bytes(('tcp://*:%s' % port).encode("utf-8")))
             # socket.bind('%s:%s' % (addr, port))
         except zmq.ZMQError as exception:
             en = exception.errno

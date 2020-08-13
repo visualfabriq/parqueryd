@@ -103,7 +103,7 @@ def test_downloader(redis_server, downloader, tmpdir):
     local_parquet = str(tmpdir.join('test_parquet'))
     df_to_parquet(data_df, local_parquet)
 
-    assert os.path.isdir(local_parquet)
+    assert os.path.exists(local_parquet)
 
     s3_conn = downloader._get_s3_conn()[-1]
 
