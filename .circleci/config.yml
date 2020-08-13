@@ -16,6 +16,7 @@ jobs:
             docker-compose -v
       - run:
           name: Start Services
+          working_directory: parqueryd
           command: |
             docker-compose -f docker-compose.yml up --build -d
       - run:
@@ -23,14 +24,16 @@ jobs:
           command: sleep 30
       - run:
           name: Run Tests
-          command: docker-compose -f docker-compose.yml run parqueryd pytest -v --junitxml=/home/circleci/parqueryd/test-results/pytest-report.xml
+          working_directory: parqueryd
+          command: docker-compose -f docker-compose.yml run parqueryd pytest -v --junitxml=test-results/pytest/pytest-report.xml
       - run:
           name: Stop Services
           command: docker-compose down
+          working_directory: parqueryd
       - store_test_results:
-          path: /home/circleci/parqueryd/test-results/pytest-report.xml
+          path: parqueryd/test-results
       - store_artifacts:
-          path: test-results
+          path: parqueryd/test-results
           destination: tr1
 
 #  build3:
