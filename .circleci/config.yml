@@ -4,8 +4,10 @@ jobs:
     docker:
       - image: circleci/python:2.7
 
+    working_directory: ~/
     steps:
       - checkout:
+          path: ~/parqueryd
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
