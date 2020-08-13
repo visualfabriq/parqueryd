@@ -30,7 +30,6 @@ from parqueryd.messages import msg_factory, WorkerRegisterMessage, ErrorMessage,
 from parqueryd.tool import rm_file_or_dir
 
 DATA_FILE_EXTENSION = '.parquet'
-DATA_SHARD_FILE_EXTENSION = '.parquets'
 # timeout in ms : how long to wait for network poll, this also affects frequency of seeing new controllers and datafiles
 POLLING_TIMEOUT = 5000
 # how often in seconds to send a WorkerRegisterMessage
@@ -107,8 +106,7 @@ class WorkerBase(object):
     def check_datafiles(self):
         has_new_files = False
         replacement_data_files = set()
-        for data_file in [filename for filename in os.listdir(self.data_dir) if
-                          filename.endswith(DATA_FILE_EXTENSION) or filename.endswith(DATA_SHARD_FILE_EXTENSION)]:
+        for data_file in [filename for filename in os.listdir(self.data_dir) if filename.endswith(DATA_FILE_EXTENSION)]:
             if data_file not in self.data_files:
                 has_new_files = True
             replacement_data_files.add(data_file)

@@ -77,7 +77,7 @@ install_requires = [
 ]
 setup_requires = []
 tests_requires = [
-    'pytest>=6.0.1',
+    'pytest>=4.6.11',
     'pytest-cov>=2.10.0',
     'codacy-coverage>=1.3.11',
 ]
