@@ -23,7 +23,7 @@ jobs:
           command: sleep 30
       - run:
           name: Run Tests
-          command: docker-compose -f docker-compose.yml run parqueryd pytest -v --junitxml=~/parqueryd/test-results/pytest/pytest-report.xml
+          command: docker-compose -f docker-compose.yml run parqueryd pytest -v --junitxml=/home/circleci/parqueryd/test-results/pytest/pytest-report.xml
       - run:
           name: Stop Services
           command: docker-compose down
