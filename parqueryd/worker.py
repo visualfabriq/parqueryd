@@ -435,10 +435,10 @@ class DownloaderNode(WorkerBase):
         self.file_downloader_progress(ticket, fileurl, 'DONE')
 
     def _get_prod_name(self, ticket, file_name):
-        return os.path.join(parqueryd.config.DEFAULT_DATA_DIR, ticket + '_', file_name)
+        return os.path.join(parqueryd.config.DEFAULT_DATA_DIR, ticket + '_' + file_name)
 
     def _get_temp_name(self, ticket, file_name):
-        return os.path.join(parqueryd.config.INCOMING, ticket + '_', file_name)
+        return os.path.join(parqueryd.config.INCOMING, ticket + '_' + file_name)
 
     def _get_s3_conn(self):
         """Create a boto3 """

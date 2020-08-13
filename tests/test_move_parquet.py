@@ -68,7 +68,7 @@ def test_moveparquet(redis_server, tmpdir):
 
     # copy the parquet directory to bqueyd.INCOMING
     ticket = str(uuid4())
-    ticket_dir = os.path.join(parqueryd.config.INCOMING, ticket + '_', 'test_mover.parquet')
+    ticket_dir = os.path.join(parqueryd.config.INCOMING, ticket + '_test_mover.parquet')
     shutil.copy(local_parquet, ticket_dir)
 
     # Construct the redis entry that before downloading
