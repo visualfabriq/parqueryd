@@ -28,7 +28,7 @@ jobs:
           name: Stop Services
           command: docker-compose down
       - store_test_results:
-          path: test-results
+          path: /home/circleci/parqueryd/test-results/pytest-report.xml
       - store_artifacts:
           path: test-results
           destination: tr1
