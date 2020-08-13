@@ -1,13 +1,12 @@
 version: 2
 jobs:
-  build:
+  build27:
     docker:
       - image: circleci/python:2.7
 
-    working_directory: ~/PycharmProjects
+    working_directory: ~/parqueryd
     steps:
       - checkout:
-          path: ~/PycharmProjects/parqueryd
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
@@ -25,35 +24,43 @@ jobs:
           command: sleep 30
       - run:
           name: Run Tests
-          working_directory: parqueryd
-          command: docker-compose -f docker-compose.yml run parqueryd pytest -vs tests --junitxml=test-results/pytest/pytest-report.xml --cov-report xml:test-results/pytest-cov/coverage.xml --cov=parqueryd
+          command: docker-compose -f docker-compose.yml run pytest -vs parqueryd/tests --junitxml=test-results/pytest/pytest-report.xml --cov-report xml:test-results/pytest-cov/coverage.xml --cov=parqueryd
       - run:
           name: Stop Services
           command: docker-compose down
           working_directory: parqueryd
-#     - name: Upload Coverage
-#         command: python-codacy-coverage -r test-results/pytest-cov/coverage.xml
-#         working_directory: parqueryd
       - store_test_results:
-          path: parqueryd/test-results
+          path: test-results
       - store_artifacts:
-          path: parqueryd/test-results
+          path: test-results
           destination: tr1
-  
-  pypi_release:
-    docker:
-      - image: circleci/python:3.7
-    steps:
-      - checkout
-      - run:
-          name: Install Twine
-          command: sudo pip install twine
-      - run:
-          name: Package Project
-          command: sudo python setup.py sdist bdist_wheel
-      - run:
-          name: Upload to Pypi
-          command: sudo twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD} dist/*  
+
+#  build3:
+#    docker:
+#      - image: circleci/python:3.7.1
+#
+#    working_directory: ~/parqueryd
+#    steps:
+#      - checkout:
+#      - run:
+#          name: Install Requirements
+#          command: sudo pip install -r requirements.txt
+#      - run:
+#          name: Install Module
+#          command: python setup.py build_ext --inplace && sudo python setup.py install
+#      - run:
+#          name: Run Tests
+#          command: pytest -vs parqueryd/tests/ --junitxml=test-results/pytest/pytest-report.xml
+
+#      - run:
+#          name: Install Twine
+#          command: sudo pip install twine
+#      - run:
+#          name: Package Project
+#          command: sudo python setup.py sdist bdist_wheel
+#      - run:
+#          name: Upload to Pypi
+#          command: sudo twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD} dist/*
 
 workflows:
   version: 2
