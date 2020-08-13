@@ -9,8 +9,8 @@ RUN wget -q https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2016-01.c
 RUN mkdir -p /srv/src/ && mkdir -p /srv/parquet/ && mkdir -p /srv/parquet/incoming
 COPY misc/parqueryd.cfg /etc/parqueryd.cfg
 
-COPY . /srv/src/parqueryd/
-WORKDIR /srv/src/parqueryd/
+COPY . ~/parqueryd/
+WORKDIR ~/parqueryd/
 RUN pip install -e .[test]
 # Keep the container running
 CMD sleep infinity
