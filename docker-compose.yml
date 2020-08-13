@@ -22,6 +22,8 @@ services:
       network: host
       context: .
       dockerfile: DockerFile
+    volumes:
+      - test-results:/srv/src/parqueryd/test-results
     depends_on:
       - redis
       - localstack

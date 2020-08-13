@@ -26,6 +26,12 @@ jobs:
           name: Run Tests
           command: docker-compose -f docker-compose.yml run parqueryd pytest -v --junitxml=test-results/pytest/pytest-report.xml
       - run:
+          name: Copy Test Results
+          when: always  # run even if previous run commands failed
+          command: |
+            docker cp $(docker-compose -f ci/docker-compose.yml ps -q parqueryd):/test-results test-results
+            ls /artifacts
+      - run:
           name: Stop Services
           command: docker-compose down
       - store_test_results:
