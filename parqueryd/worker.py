@@ -1,6 +1,7 @@
 import binascii
 import errno
 import gc
+import glob
 import importlib
 import json
 import logging
@@ -9,14 +10,14 @@ import random
 import shutil
 import signal
 import socket
-import tempfile
 import time
 import traceback
-import zipfile
 from ssl import SSLError
+import datetime
 
 import boto3
-import parquery
+from parquery.aggregate import aggregate_pq
+from parquery.transport import serialize_pa_table
 import psutil
 import redis
 import smart_open
@@ -279,19 +280,17 @@ class WorkerNode(WorkerBase):
 
         # create rootdir
         full_file_name = os.path.join(self.data_dir, filename)
-        df = parquery.aggregate_pq(
+        pq = aggregate_pq(
             full_file_name,
             groupby_col_list,
             aggregation_list,
             data_filter=where_terms_list,
-            aggregate=aggregate
+            aggregate=aggregate,
+            as_df=False
         )
 
         # create message
-        with open(buf_file, 'r') as file:
-            # add result to message
-            msg['data'] = file.read()
-        rm_file_or_dir(buf_file)
+        msg['data'] = serialize_pa_table(pq)
 
         return msg
 
@@ -398,10 +397,11 @@ class DownloaderNode(WorkerBase):
             except OSError as ose:
                 if ose == errno.EEXIST:
                     pass  # different processes might try to create the same directory at _just_ the same time causing the previous check to fail
-        temp_path = os.path.join(parqueryd.config.INCOMING, ticket, filename)
 
-        if os.path.exists(temp_path):
-            self.logger.info("%s exists, skipping download" % temp_path)
+        incoming_file = self._get_temp_name(ticket, filename)
+
+        if os.path.exists(incoming_file):
+            self.logger.info("%s exists, skipping download" % incoming_file)
             self.file_downloader_progress(ticket, fileurl, 'DONE')
         else:
             self.logger.info("Downloading ticket [%s], bucket [%s], filename [%s]" % (ticket, bucket, filename))
@@ -412,9 +412,7 @@ class DownloaderNode(WorkerBase):
 
             key = 's3://{}:{}@{}/{}'.format(access_key, secret_key, bucket, filename)
 
-            try:
-                fd, tmp_filename = tempfile.mkstemp(dir=parqueryd.config.INCOMING)
-
+            with open(incoming_file, 'wb') as fd:
                 # See: https://github.com/RaRe-Technologies/smart_open/commit/a751b7575bfc5cc277ae176cecc46dbb109e47a4
                 # Sometime we get timeout errors on the SSL connections
                 for x in range(3):
@@ -425,7 +423,7 @@ class DownloaderNode(WorkerBase):
                             progress = 0
                             while buf:
                                 buf = fin.read(pow(2, 20) * 16)  # Use a bigger buffer
-                                os.write(fd, buf)
+                                fd.write(buf)
                                 progress += len(buf)
                                 self.file_downloader_progress(ticket, fileurl, size)
                         break
@@ -435,22 +433,14 @@ class DownloaderNode(WorkerBase):
                         else:
                             pass
 
-                # unzip the tmp file to the filename
-                # if temp_path already exists, first remove it.
-                self._unzip_tmp_file(temp_path, tmp_filename)
-            finally:
-                if os.path.exists(tmp_filename):
-                    os.remove(tmp_filename)
-                os.close(fd)
         self.logger.debug('Download done %s: %s', ticket, fileurl)
         self.file_downloader_progress(ticket, fileurl, 'DONE')
 
-    def _unzip_tmp_file(self, temp_path, tmp_filename):
-        if os.path.exists(temp_path):
-            shutil.rmtree(temp_path, ignore_errors=True)
-        with zipfile.ZipFile(tmp_filename, 'r', allowZip64=True) as myzip:
-            myzip.extractall(temp_path)
-        self.logger.debug("Downloaded %s" % tmp_filename)
+    def _get_prod_name(self, ticket, file_name):
+        return os.path.join(parqueryd.config.DEFAULT_DATA_DIR, ticket + '_', file_name)
+
+    def _get_temp_name(self, ticket, file_name):
+        return os.path.join(parqueryd.config.INCOMING, ticket + '_', file_name)
 
     def _get_s3_conn(self):
         """Create a boto3 """
@@ -475,30 +465,22 @@ class DownloaderNode(WorkerBase):
             except OSError as ose:
                 if ose == errno.EEXIST:
                     pass  # different processes might try to create the same directory at _just_ the same time causing the previous check to fail
-        temp_path = os.path.join(parqueryd.config.INCOMING, ticket, blob_name)
+        incoming_file = self._get_temp_name(ticket, blob_name)
 
-        if os.path.exists(temp_path):
-            self.logger.info("%s exists, skipping download" % temp_path)
+        if os.path.exists(incoming_file):
+            self.logger.info("%s exists, skipping download" % incoming_file)
             self.file_downloader_progress(ticket, fileurl, 'DONE')
         else:
             self.logger.info(
                 "Downloading ticket [%s], container name [%s], blob name [%s]" % (ticket, container_name, blob_name))
 
             # Download blob
-            try:
-                fd, tmp_filename = tempfile.mkstemp(dir=parqueryd.config.INCOMING)
+            with open(incoming_file, 'wb') as fh:
                 blob_client = BlobClient.from_connection_string(
                     conn_str=self.azure_conn_string, container_name=container_name, blob_name=blob_name
                 )
                 download_stream = blob_client.download_blob()
-                with open(tmp_filename, 'wb') as fh:
-                    fh.write(download_stream.content_as_bytes(max_concurrency=1))
-
-                self._unzip_tmp_file(temp_path, tmp_filename)
-            finally:
-                if os.path.exists(tmp_filename):
-                    os.remove(tmp_filename)
-                os.close(fd)
+                fh.write(download_stream.readall())
 
             self.logger.debug('Download done %s azure://%s/%s', ticket, container_name, blob_name)
             self.file_downloader_progress(ticket, fileurl, 'DONE')
@@ -521,23 +503,29 @@ class MoveparquetNode(DownloaderNode):
     def moveparquet(self, ticket):
         # A notification from the controller that all files are downloaded on all nodes,
         # the files in this ticket can be moved into place
-        ticket_path = os.path.join(parqueryd.config.INCOMING, ticket)
-        if os.path.exists(ticket_path):
-            for filename in os.listdir(ticket_path):
-                prod_path = os.path.join(parqueryd.config.DEFAULT_DATA_DIR, filename)
+        ticket_path = os.path.join(parqueryd.config.INCOMING, ticket + '_*')
+        file_name_list = glob.glob(ticket_path)
+        if file_name_list:
+            for filename in file_name_list:
+                filename_without_ticket =  filename[filename.index('_') + 1:]
+                prod_path = self._get_prod_name(ticket, filename_without_ticket)
                 if os.path.exists(prod_path):
-                    shutil.rmtree(prod_path, ignore_errors=True)
-                ready_path = os.path.join(ticket_path, filename)
+                    rm_file_or_dir(prod_path)
+                incoming_path = self._get_temp_name(ticket, filename_without_ticket)
+
                 # Add a metadata file to the downloaded item
-                metadata = {'ticket': ticket, 'timestamp': time.time(), 'localtime': time.ctime()}
-                metadata_filepath = os.path.join(ready_path, 'parqueryd.metadata')
+                metadata_filepath = self._get_prod_name(ticket, filename_without_ticket + '.metadata')
+                metadata = {'ticket': ticket,
+                            'timestamp': time.time(),
+                            'localtime': time.ctime(),
+                            'utc':  str(datetime.datetime.utcnow())
+                            }
                 open(metadata_filepath, 'w').write(json.dumps(metadata, indent=2))
-                self.logger.debug("Moving %s %s" % (ready_path, prod_path))
-                shutil.move(ready_path, prod_path)
-            self.logger.debug('Now removing entire ticket %s', ticket_path)
-            shutil.rmtree(ticket_path, ignore_errors=True)
+
+                self.logger.debug("Moving %s %s" % (incoming_path, prod_path))
+                shutil.move(incoming_path, prod_path)
         else:
-            self.logger.debug('Doing a moveparquet for path %s which does not exist', ticket_path)
+            self.logger.debug('Doing a moveparquet for files %s which do not exist', ticket_path)
 
     def check_downloads(self):
         # Check all the entries for a specific ticket over all the nodes

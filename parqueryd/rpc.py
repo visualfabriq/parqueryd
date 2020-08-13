@@ -114,7 +114,7 @@ class RPC(object):
                 # The results returned from controller is a tarfile with all the results, convert it to a Dataframe
                 if name == 'groupby':
                     _, groupby_col_list, agg_list, where_terms_list = args[0], args[1], args[2], args[3]
-                    result = self.uncompress_groupby_to_df(rep, groupby_col_list, agg_list, where_terms_list,
+                    result = self.uncompress_groupby_to_pq(rep, groupby_col_list, agg_list, where_terms_list,
                                                            aggregate=kwargs.get('aggregate', False))
                 else:
                     rep = msg_factory(json.loads(rep))
@@ -130,7 +130,7 @@ class RPC(object):
 
         return _rpc
 
-    def uncompress_groupby_to_df(self, result_tar, groupby_col_list, agg_list, where_terms_list, aggregate=False):
+    def uncompress_groupby_to_pq(self, result_tar, groupby_col_list, agg_list, where_terms_list, aggregate=False):
         # uncompress result returned by the groupby and convert it to a Pandas DataFrame
         tmp_dir = None
         try:
