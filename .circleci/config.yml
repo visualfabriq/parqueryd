@@ -28,9 +28,9 @@ jobs:
           name: Stop Services
           command: docker-compose down
       - store_test_results:
-          path: test-results
+          path: parqueryd/test-results
       - store_artifacts:
-          path: test-results
+          path: parqueryd/test-results
           destination: tr1
 
 #  build3:
