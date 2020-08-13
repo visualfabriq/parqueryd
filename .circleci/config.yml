@@ -4,7 +4,7 @@ jobs:
     docker:
       - image: circleci/python:2.7
 
-    working_directory: /srv/src/parqueryd
+    working_directory: ~/parqueryd
     steps:
       - checkout:
       - setup_remote_docker:
@@ -28,9 +28,9 @@ jobs:
           name: Stop Services
           command: docker-compose down
       - store_test_results:
-          path: test-results
+          path: /srv/src/parqueryd/test-results
       - store_artifacts:
-          path: test-results
+          path: /srv/src/parqueryd/test-results
           destination: tr1
 
 #  build3:
