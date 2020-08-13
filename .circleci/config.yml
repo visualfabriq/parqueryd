@@ -16,7 +16,6 @@ jobs:
             docker-compose -v
       - run:
           name: Start Services
-          working_directory: parqueryd
           command: |
             docker-compose -f docker-compose.yml up --build -d
       - run:
@@ -28,7 +27,6 @@ jobs:
       - run:
           name: Stop Services
           command: docker-compose down
-          working_directory: parqueryd
       - store_test_results:
           path: test-results
       - store_artifacts:
