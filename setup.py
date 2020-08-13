@@ -64,17 +64,26 @@ sources = []
 cmdclass = {'build_ext': build_ext}
 
 optional_libs = ['numexpr>=2.6.9']
+
 install_requires = [
     'parquery>=0.1.6',
     'pyzmq>=19.0.2',
     'redis>=3.5.3',
     'boto3>=1.14.40',
-    'smart_open>=1.11.0',
     'netifaces>=0.10.9',
     'configobj>=5.0.6',
     'psutil>=5.7.2',
-    'azure-storage-blob>=12.3.2',
 ]
+if v < (3,):
+    install_requires.extend([
+    'smart_open==1.10.1',
+    'azure-storage-blob==12.3.2',
+])
+else:
+    install_requires.extend([
+    'smart_open>=1.11.1',
+    'azure-storage-blob>=12.4.0',
+])
 setup_requires = []
 tests_requires = [
     'pytest>=4.6.11',
