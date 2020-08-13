@@ -11,10 +11,10 @@ import numpy as np
 import pandas as pd
 import pytest
 import redis
+from parquery.write import df_to_parquet
 
 import parqueryd.config
 from parqueryd.worker import MoveparquetNode
-from parquery.write import df_to_parquet
 
 TEST_REDIS = 'redis://redis:6379/0'
 
@@ -68,8 +68,8 @@ def test_moveparquet(redis_server, tmpdir):
 
     # copy the parquet directory to bqueyd.INCOMING
     ticket = str(uuid4())
-    ticket_dir = os.path.join(parqueryd.config.INCOMING, ticket, 'test_mover.parquet')
-    shutil.copytree(local_parquet, ticket_dir)
+    ticket_dir = os.path.join(parqueryd.config.INCOMING, ticket + '_', 'test_mover.parquet')
+    shutil.copy(local_parquet, ticket_dir)
 
     # Construct the redis entry that before downloading
     progress_slot = '%s_%s' % (time.time() - 60, -1)
@@ -86,7 +86,7 @@ def test_moveparquet(redis_server, tmpdir):
     files_in_default_data_dir.sort()
     assert files_in_default_data_dir == ['incoming']
     # ticket_dir still exists
-    assert os.path.isdir(ticket_dir)
+    assert os.path.exists(ticket_dir)
 
     # Now update progress slot
     new_progress_slot = '%s_%s' % (time.time(), 'DONE')

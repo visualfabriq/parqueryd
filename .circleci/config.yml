@@ -23,7 +23,7 @@ jobs:
           command: sleep 30
       - run:
           name: Run Tests
-          command: docker-compose -f docker-compose.yml run parqueryd pytest -vs parqueryd/tests --junitxml=test-results/pytest/pytest-report.xml --cov-report xml:test-results/pytest-cov/coverage.xml --cov=parqueryd
+          command: docker-compose -f docker-compose.yml run parqueryd pytest -vs tests --junitxml=test-results/pytest/pytest-report.xml --cov-report xml:test-results/pytest-cov/coverage.xml --cov=parqueryd
       - run:
           name: Stop Services
           command: docker-compose down
