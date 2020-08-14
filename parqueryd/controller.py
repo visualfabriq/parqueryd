@@ -156,7 +156,7 @@ class ControllerNode(object):
                 original_rpc = self.rpc_segments.get(parent_token)
 
                 if isinstance(msg, ErrorMessage):
-                    self.logger.debug('Errormesssage %s' % msg.get('payload'))
+                    self.logger.debug('Error messsage %s' % msg.get('payload'))
                     # Delete this entire message segments, if it still exists
                     if parent_token in self.rpc_segments:
                         del self.rpc_segments[parent_token]
@@ -186,10 +186,12 @@ class ControllerNode(object):
                     del msg
                     msg = original_rpc['msg']
 
-                    # if finished, aggregate the result to a combined "tarfile of tarfiles"
+                    # if finished, aggregate the result to a combined arrow table
                     pa_tables = [result_table for result_table in original_rpc['results'].values() if
                                  result_table is not None]
                     if pa_tables:
+                        for pa_table in pa_tables:
+                            print(pa_table.schema)
                         msg['data'] = serialize_pa_table(pa.concat_tables(pa_tables))
 
                     del self.rpc_segments[parent_token]
