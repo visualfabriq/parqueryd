@@ -66,7 +66,7 @@ cmdclass = {'build_ext': build_ext}
 optional_libs = ['numexpr>=2.6.9']
 
 install_requires = [
-    'parquery>=0.1.6',
+    'parquery>=0.1.7',
     'pyzmq>=19.0.2',
     'redis>=3.5.3',
     'boto3>=1.14.40',
