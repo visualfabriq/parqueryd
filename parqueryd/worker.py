@@ -278,7 +278,7 @@ class WorkerNode(WorkerBase):
 
         # create rootdir
         full_file_name = os.path.join(self.data_dir, filename)
-        pq = aggregate_pq(
+        pa_table = aggregate_pq(
             full_file_name,
             groupby_col_list,
             aggregation_list,
@@ -288,7 +288,10 @@ class WorkerNode(WorkerBase):
         )
 
         # create message
-        msg['data'] = serialize_pa_table(pq)
+        if len(pa_table) == 0:
+            msg['data'] = None
+        else:
+            msg['data'] = serialize_pa_table(pa_table)
 
         return msg
 
