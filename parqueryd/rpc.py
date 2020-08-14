@@ -7,6 +7,8 @@ import tarfile
 import tempfile
 import time
 from tarfile import TarFile, TarError
+from parquery.transport import deserialize_pa_table, serialize_pa_table
+from parquery.aggregate import aggregate_pa
 
 import redis
 import zmq
@@ -111,7 +113,6 @@ class RPC(object):
             if not rep:
                 raise RPCError("No response from DQE, retries %s exceeded" % self.retries)
             try:
-                # The results returned from controller is a tarfile with all the results, convert it to a Dataframe
                 if name == 'groupby':
                     _, groupby_col_list, agg_list, where_terms_list = args[0], args[1], args[2], args[3]
                     result = self.uncompress_groupby_to_pq(rep, groupby_col_list, agg_list, where_terms_list,
@@ -130,51 +131,17 @@ class RPC(object):
 
         return _rpc
 
-    def uncompress_groupby_to_pq(self, result_tar, groupby_col_list, agg_list, where_terms_list, aggregate=False):
+    def uncompress_groupby_to_pq(self, result, groupby_col_list, agg_list, where_terms_list, aggregate=False):
         # uncompress result returned by the groupby and convert it to a Pandas DataFrame
-        tmp_dir = None
-        try:
-            try:
-                tar_file = TarFile(fileobj=StringIO(result_tar))
-                tmp_dir = tempfile.mkdtemp(prefix='tar_dir_')
-                tar_file.extractall(tmp_dir)
-            except TarError:
-                self.logger.exception("Could not create/extract tar.")
-                raise ValueError(result_tar)
-            del result_tar
-            del tar_file
+        pa_table = deserialize_pa_table(result)
+        result_df = aggregate_pa(
+            pa_table,
+            groupby_col_list,
+            agg_list,
+            data_filter=None,  # we can assume the filtering already happened
+            aggregate=aggregate)
 
-            ct = None
-
-            # now untar and aggregate the individual shard results
-            for i, sub_tar in enumerate(glob.glob(os.path.join(tmp_dir, '*'))):
-                new_dir = os.path.join(tmp_dir, 'parquet_' + str(i))
-                rm_file_or_dir(new_dir)
-                with tarfile.open(sub_tar, mode='r') as tar_file:
-                    tar_file.extractall(new_dir)
-                # rm_file_or_dir(sub_tar)
-                ctable_dir = glob.glob(os.path.join(new_dir, '*'))[0]
-                new_ct = ctable(rootdir=ctable_dir, mode='a')
-                if i == 0:
-                    ct = new_ct
-                else:
-                    ct.append(new_ct)
-
-            # aggregate by groupby parameters
-            if ct is None:
-                result_df = pd.DataFrame()
-            elif aggregate:
-                new_dir = os.path.join(tmp_dir, 'end_result')
-                rm_file_or_dir(new_dir)
-                # we can only sum now
-                new_agg_list = [[x[2], 'sum', x[2]] for x in agg_list]
-                result_ctable = ct.groupby(groupby_col_list, new_agg_list, rootdir=new_dir)
-                result_df = result_ctable.todataframe()
-            else:
-                result_df = ct.todataframe()
-        finally:
-            rm_file_or_dir(tmp_dir)
-
+        del pa_table
         return result_df
 
     def get_download_data(self):
