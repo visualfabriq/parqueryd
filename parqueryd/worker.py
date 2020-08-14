@@ -1,4 +1,5 @@
 import binascii
+import datetime
 import errno
 import gc
 import glob
@@ -13,17 +14,15 @@ import socket
 import time
 import traceback
 from ssl import SSLError
-import datetime
 
 import boto3
-from parquery.aggregate import aggregate_pq
-from parquery.transport import serialize_pa_table
-from parqueryd.util import rm_file_or_dir
 import psutil
 import redis
 import smart_open
 import zmq
 from azure.storage.blob import BlobClient
+from parquery.aggregate import aggregate_pq
+from parquery.transport import serialize_pa_table
 
 import parqueryd.config
 from parqueryd.messages import msg_factory, WorkerRegisterMessage, ErrorMessage, BusyMessage, StopMessage, \
@@ -507,7 +506,7 @@ class MoveparquetNode(DownloaderNode):
         file_name_list = glob.glob(ticket_path)
         if file_name_list:
             for filename in file_name_list:
-                filename_without_ticket =  filename[filename.index('_') + 1:]
+                filename_without_ticket = filename[filename.index('_') + 1:]
                 prod_path = self._get_prod_name(ticket, filename_without_ticket)
                 if os.path.exists(prod_path):
                     rm_file_or_dir(prod_path)
@@ -518,7 +517,7 @@ class MoveparquetNode(DownloaderNode):
                 metadata = {'ticket': ticket,
                             'timestamp': time.time(),
                             'localtime': time.ctime(),
-                            'utc':  str(datetime.datetime.utcnow())
+                            'utc': str(datetime.datetime.utcnow())
                             }
                 open(metadata_filepath, 'w').write(json.dumps(metadata, indent=2))
 
