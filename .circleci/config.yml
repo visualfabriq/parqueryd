@@ -26,8 +26,11 @@ jobs:
           name: Run Tests
           command: docker-compose -f docker-compose.yml run parqueryd pytest -v --junitxml=test-results/pytest/pytest-report.xml
       - run:
+          name: check running docker
+          command: |
+            docker ps
+      - run:
           name: Copy Test Results
-          when: always  # run even if previous run commands failed
           command: |
             docker cp $(docker ps -q --filter name=parqueryd_parqueryd_1):/srv/src/parqueryd/test-results ./test-results
       - run:
