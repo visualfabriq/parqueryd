@@ -10,7 +10,7 @@ COPY misc/parqueryd.cfg /etc/parqueryd.cfg
 
 COPY . /srv/src/parqueryd/
 WORKDIR /srv/src/parqueryd/
-RUN pip install -e .
+RUN pip install -e .[test]
 
 # Keep the container running
 CMD sleep infinity
