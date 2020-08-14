@@ -97,7 +97,7 @@ def test_moveparquet(redis_server, tmpdir):
     sleep(5)
     files_in_default_data_dir = os.listdir(parqueryd.config.DEFAULT_DATA_DIR)
     files_in_default_data_dir.sort()
-    assert files_in_default_data_dir == ['incoming', 'test_mover.parquet']
+    assert files_in_default_data_dir == ['incoming', 'test_mover.parquet', 'test_mover.parquet.metadata']
     # ticket_dir should have been deleted.
     assert not os.path.exists(ticket_dir)
 
