@@ -435,8 +435,8 @@ class DownloaderNode(WorkerBase):
         self.logger.debug('Download done %s: %s', ticket, fileurl)
         self.file_downloader_progress(ticket, fileurl, 'DONE')
 
-    def _get_prod_name(self, ticket, file_name):
-        return os.path.join(parqueryd.config.DEFAULT_DATA_DIR, ticket + '_' + file_name)
+    def _get_prod_name(self, file_name):
+        return os.path.join(parqueryd.config.DEFAULT_DATA_DIR, file_name)
 
     def _get_temp_name(self, ticket, file_name):
         return os.path.join(parqueryd.config.INCOMING, ticket + '_' + file_name)
@@ -507,13 +507,13 @@ class MoveparquetNode(DownloaderNode):
         if file_name_list:
             for filename in file_name_list:
                 filename_without_ticket = filename[filename.index('_') + 1:]
-                prod_path = self._get_prod_name(ticket, filename_without_ticket)
+                prod_path = self._get_prod_name(filename_without_ticket)
                 if os.path.exists(prod_path):
                     rm_file_or_dir(prod_path)
                 incoming_path = self._get_temp_name(ticket, filename_without_ticket)
 
                 # Add a metadata file to the downloaded item
-                metadata_filepath = self._get_prod_name(ticket, filename_without_ticket + '.metadata')
+                metadata_filepath = self._get_prod_name(filename_without_ticket + '.metadata')
                 metadata = {'ticket': ticket,
                             'timestamp': time.time(),
                             'localtime': time.ctime(),
