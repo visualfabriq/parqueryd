@@ -1,7 +1,6 @@
 import binascii
 import os
 import random
-import shutil
 import time
 
 import netifaces
@@ -37,20 +36,6 @@ def bind_to_random_port(socket, addr, min_port=49152, max_port=65536, max_tries=
         else:
             return socket.identity
     raise zmq.ZMQBindError("Could not bind socket to random port.")
-
-
-def rm_file_or_dir(path):
-    if os.path.exists(path):
-        if os.path.isdir(path):
-            if os.path.islink(path):
-                os.unlink(path)
-            else:
-                shutil.rmtree(path)
-        else:
-            if os.path.islink(path):
-                os.unlink(path)
-            else:
-                os.remove(path)
 
 
 def tree_checksum(path):

@@ -18,6 +18,7 @@ import datetime
 import boto3
 from parquery.aggregate import aggregate_pq
 from parquery.transport import serialize_pa_table
+from parqueryd.util import rm_file_or_dir
 import psutil
 import redis
 import smart_open
@@ -369,7 +370,8 @@ class DownloaderNode(WorkerBase):
             # Clean up the whole ticket contents from disk
             ticket_path = os.path.join(parqueryd.config.INCOMING, ticket)
             self.logger.debug('Now removing entire ticket %s', ticket_path)
-            shutil.rmtree(ticket_path, ignore_errors=True)
+            for filename in glob.glob(ticket_path + '*'):
+                rm_file_or_dir(os.path.join(parqueryd.config.INCOMING, filename))
             raise Exception("Ticket %s progress slot %s not found, aborting download" % (ticket, node_filename_slot))
         # A progress slot contains a timestamp_filesize
         progress_slot = '%s_%s' % (time.time(), progress)

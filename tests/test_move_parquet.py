@@ -37,7 +37,8 @@ def clear_dirs():
         shutil.rmtree(parqueryd.config.INCOMING)
     if os.path.isdir(parqueryd.config.DEFAULT_DATA_DIR):
         shutil.rmtree(parqueryd.config.DEFAULT_DATA_DIR)
-
+    os.makedirs(parqueryd.config.DEFAULT_DATA_DIR)
+    os.makedirs(parqueryd.config.INCOMING)
 
 @pytest.fixture
 def mover():

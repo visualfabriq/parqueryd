@@ -63,6 +63,7 @@ def redis_server():
 def clear_incoming():
     if os.path.isdir(parqueryd.config.INCOMING):
         shutil.rmtree(parqueryd.config.INCOMING)
+    os.makedirs(parqueryd.config.INCOMING)
 
 
 @pytest.fixture
