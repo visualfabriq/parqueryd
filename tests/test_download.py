@@ -7,6 +7,7 @@ import time
 from contextlib import contextmanager
 from time import sleep
 from uuid import uuid4
+import glob
 
 import boto3
 import numpy as np
@@ -101,7 +102,7 @@ def test_downloader(redis_server, downloader, tmpdir):
     data_df = pd.DataFrame(
         data=np.random.rand(100, 10),
         columns=['col_{}'.format(i + 1) for i in range(10)])
-    local_parquet = str(tmpdir.join('test_parquet'))
+    local_parquet = str(tmpdir.join('test.parquet'))
     df_to_parquet(data_df, local_parquet)
 
     assert os.path.exists(local_parquet)
@@ -119,8 +120,8 @@ def test_downloader(redis_server, downloader, tmpdir):
         node_filename_slot = '%s_%s' % (socket.gethostname(), 's3://parquet/test.parquet')
         ticket = str(uuid4())
 
-        incoming_dir = os.path.join(parqueryd.config.INCOMING, ticket)
-        assert not os.path.isdir(incoming_dir)
+        incoming_dir = parqueryd.config.INCOMING
+        assert not glob.glob(os.path.join(incoming_dir, '*'))
 
         redis_server.hset(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot, progress_slot)
 
@@ -128,7 +129,7 @@ def test_downloader(redis_server, downloader, tmpdir):
         sleep(10)
 
         # Check that incoming dir now has the test.parquet file.
-        assert os.listdir(incoming_dir) == ['test.parquet']
+        assert glob.glob(os.path.join(incoming_dir, '*')) == [ticket + '_test.parquet']
 
         # Check that the progress slot has been updated
         updated_slot = redis_server.hget(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot)
