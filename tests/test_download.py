@@ -129,7 +129,7 @@ def test_downloader(redis_server, downloader, tmpdir):
         sleep(10)
 
         # Check that incoming dir now has the test.parquet file.
-        assert glob.glob(os.path.join(incoming_dir, '*')) == [ticket + '_test.parquet']
+        assert glob.glob(os.path.join(incoming_dir, '*')) == [os.path.join(incoming_dir, ticket + '_test.parquet')]
 
         # Check that the progress slot has been updated
         updated_slot = redis_server.hget(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot)
