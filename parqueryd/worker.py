@@ -389,13 +389,6 @@ class DownloaderNode(WorkerBase):
         tmp = fileurl.replace('s3://', '').split('/')
         bucket = tmp[0]
         filename = '/'.join(tmp[1:])
-        ticket_path = os.path.join(parqueryd.config.INCOMING, ticket)
-        if not os.path.exists(ticket_path):
-            try:
-                os.makedirs(ticket_path)
-            except OSError as ose:
-                if ose == errno.EEXIST:
-                    pass  # different processes might try to create the same directory at _just_ the same time causing the previous check to fail
 
         incoming_file = self._get_temp_name(ticket, filename)
 
@@ -457,13 +450,6 @@ class DownloaderNode(WorkerBase):
         tmp = fileurl.replace('azure://', '').split('/')
         container_name = tmp[0]
         blob_name = tmp[1]
-        ticket_path = os.path.join(parqueryd.config.INCOMING, ticket)
-        if not os.path.exists(ticket_path):
-            try:
-                os.makedirs(ticket_path)
-            except OSError as ose:
-                if ose == errno.EEXIST:
-                    pass  # different processes might try to create the same directory at _just_ the same time causing the previous check to fail
         incoming_file = self._get_temp_name(ticket, blob_name)
 
         if os.path.exists(incoming_file):
