@@ -1,21 +1,21 @@
 import binascii
+import gc
 import logging
 import os
 import random
 import socket
-import tarfile
-import tempfile
 import time
 import traceback
 
+import pyarrow as pa
 import redis
 import zmq
+from parquery.transport import deserialize_pa_table, serialize_pa_table
 
 import parqueryd
 import parqueryd.config
 from parqueryd.messages import msg_factory, Message, WorkerRegisterMessage, ErrorMessage, \
     BusyMessage, DoneMessage, StopMessage, TicketDoneMessage
-from parqueryd.tool import rm_file_or_dir
 from parqueryd.util import get_my_ip, bind_to_random_port
 
 POLLING_TIMEOUT = 500  # timeout in ms : how long to wait for network poll, this also affects frequency of seeing new nodes
@@ -170,44 +170,27 @@ class ControllerNode(object):
 
                 args, kwargs = msg.get_args_kwargs()
                 filename = args[0]
-                result_file = msg.get('data')
 
-                # write result to a temp file
-                if result_file:
-                    tmp_file_fd, tmp_file = tempfile.mkstemp(prefix='sub_')
-                    os.write(tmp_file_fd, result_file)
+                if msg.get('data'):
+                    result_table = deserialize_pa_table(msg['data'])
                 else:
-                    tmp_file = tmp_file_fd = None
-                if tmp_file_fd:
-                    os.close(tmp_file_fd)
+                    result_table = None
 
-                del result_file
-                original_rpc['results'][filename] = tmp_file
+                original_rpc['results'][filename] = result_table
 
                 if len(original_rpc['results']) == len(original_rpc['filenames']):
                     # Check to see that there are no filenames with no Result yet
                     # TODO as soon as any workers gives an error abort the whole enchilada
 
-                    # if finished, aggregate the result to a combined "tarfile of tarfiles"
-
-                    tar_file_fd, tar_file = tempfile.mkstemp(prefix='main_')
-                    os.close(tar_file_fd)
-                    with tarfile.open(tar_file, mode='w') as archive:
-                        for filename, result_file in original_rpc['results'].items():
-                            if result_file is not None:
-                                archive.add(result_file, arcname=filename)
-                                # clean temp file
-                                rm_file_or_dir(result_file)
-
                     # We have received all the segment, send a reply to RPC caller
                     del msg
                     msg = original_rpc['msg']
 
-                    # create message result and clean uop
-                    with open(tar_file, 'r') as file:
-                        # add result to message
-                        msg['data'] = file.read()
-                    rm_file_or_dir(tar_file)
+                    # if finished, aggregate the result to a combined "tarfile of tarfiles"
+                    pa_tables = [result_table for result_table in original_rpc['results'].values() if
+                                 result_table is not None]
+                    if pa_tables:
+                        msg['data'] = serialize_pa_table(pa.concat_tables(pa_tables))
 
                     del self.rpc_segments[parent_token]
                 else:
@@ -217,6 +200,8 @@ class ControllerNode(object):
             msg_id = binascii.unhexlify(msg.get('token'))
             if 'data' in msg:
                 self.send(msg_id, msg['data'], is_rpc=True)
+                del msg['data']
+                gc.collect()
             else:
                 self.send(msg_id, msg.to_json(), is_rpc=True)
             self.logger.debug('RPC Msg handled: %s' % msg.get('payload', '?'))
@@ -458,9 +443,11 @@ class ControllerNode(object):
             for node in nodes:
                 # A progress slot contains a timestamp_filesize
                 progress_slot = '%s_%s' % (
-                time.time() - 60, -1)  # give the slot a timestamp of now -1 minute so we can see when it was created
+                    time.time() - 60,
+                    -1)  # give the slot a timestamp of now -1 minute so we can see when it was created
                 node_filename_slot = '%s_%s' % (node, filename)
-                self.redis_server.hset(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot, progress_slot)
+                self.redis_server.hset(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot,
+                                       progress_slot)
 
         if wait:
             msg.add_as_binary('result', ticket)
