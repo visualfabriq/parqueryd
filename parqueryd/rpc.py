@@ -3,15 +3,13 @@ import json
 import logging
 import os
 import random
-import tarfile
-import tempfile
 import time
-from tarfile import TarFile, TarError
-from parquery.transport import deserialize_pa_table, serialize_pa_table
-from parquery.aggregate import aggregate_pa
 
 import redis
 import zmq
+from parquery.aggregate import aggregate_pa
+from parquery.transport import deserialize_pa_table
+from pyarrow import ArrowInvalid
 
 import parqueryd.config
 from parqueryd.messages import msg_factory, RPCMessage, ErrorMessage
@@ -20,9 +18,6 @@ try:
     from cStringIO import StringIO
 except ImportError:
     from io import StringIO
-import glob
-import pandas as pd
-from parqueryd.tool import rm_file_or_dir
 
 
 class RPCError(Exception):
@@ -133,7 +128,12 @@ class RPC(object):
 
     def uncompress_groupby_to_pq(self, result, groupby_col_list, agg_list, where_terms_list, aggregate=False):
         # uncompress result returned by the groupby and convert it to a Pandas DataFrame
-        pa_table = deserialize_pa_table(result)
+        try:
+            pa_table = deserialize_pa_table(result)
+        except ArrowInvalid:
+            # if it's not a pyarrow table, an error must have happened and we should have a string message
+            raise ValueError(result)
+
         result_df = aggregate_pa(
             pa_table,
             groupby_col_list,
