@@ -28,12 +28,6 @@ def taxi_df():
     yield taxi_df
 
 
-@pytest.fixture(scope='module')
-def parquet_dir(request, tmpdir_factory):
-    """A tmpdir fixture for the module scope. Persists throughout the module."""
-    return tmpdir_factory.mktemp(request.module.__name__)
-
-
 class DummyDownloader(DownloaderNode):
 
     def download_file(self, ticket, filename):
@@ -41,7 +35,7 @@ class DummyDownloader(DownloaderNode):
 
 
 @pytest.fixture(scope='module')
-def rpc(parquet_dir):
+def rpc():
     redis_server = redis.from_url(TEST_REDIS)
     redis_server.flushdb()
     controller = ControllerNode(redis_url=TEST_REDIS, loglevel=logging.DEBUG)
@@ -51,7 +45,7 @@ def rpc(parquet_dir):
     # Sleep 5 seconds, just to make sure all connections are properly established
     sleep(5)
 
-    worker = WorkerNode(redis_url=TEST_REDIS, loglevel=logging.DEBUG, data_dir=str(parquet_dir),
+    worker = WorkerNode(redis_url=TEST_REDIS, loglevel=logging.DEBUG,
                         restart_check=False)
     worker_thread = threading.Thread(target=worker.go)
     worker_thread.daemon = True
@@ -75,22 +69,23 @@ def rpc(parquet_dir):
 
 
 @pytest.fixture(scope='module')
-def shards(parquet_dir, taxi_df):
-    single_parquet = str(parquet_dir.join('yellow_tripdata_2016-01.parquet'))
+def shards(taxi_df):
+    shard_filenames = []
+    single_parquet = os.path.join(parqueryd.config.DEFAULT_DATA_DIR, 'yellow_tripdata_2016-01.parquet')
     df_to_parquet(taxi_df, single_parquet)
+    shard_filenames.append(single_parquet)
 
     NR_SHARDS = 10
     step = len(taxi_df) // NR_SHARDS
     remainder = len(taxi_df) - step * NR_SHARDS
     count = 0
-    shard_filenames = []
     for idx in range(0, len(taxi_df), step):
         if count == NR_SHARDS - 1 and remainder >= 0:
             step += remainder
         elif count == NR_SHARDS:
             break
 
-        shard_file = str(parquet_dir.join('tripdata_2016-01-%s.parquet' % count))
+        shard_file = os.path.join(parqueryd.config.DEFAULT_DATA_DIR, 'yellow_tripdata_2016-01-%s.parquet' % count)
         df_to_parquet(taxi_df[idx:idx + step], shard_file)
         shard_filenames.append(shard_file)
         count += 1
@@ -146,8 +141,9 @@ def compare_with_pandas(taxi_df, rpc, shards, group_col, agg_col, method):
     full = os.path.basename(shards[0])
     full_result = rpc.groupby([full], [group_col], [[agg_col, method, agg_col]], [])
     full_result = full_result.sort_values(by=group_col)
+    full_result = full_result.reset_index(drop=True)
 
-    gp = taxi_df.groupby(group_col, sort=True)[agg_col]
+    gp = taxi_df.groupby(group_col, sort=True, as_index=False)[agg_col]
     if method == 'sum':
         pandas_result = gp.sum()
     elif method == 'mean':
@@ -157,11 +153,9 @@ def compare_with_pandas(taxi_df, rpc, shards, group_col, agg_col, method):
     else:
         assert False, "Unknown method: {}".format(method)
 
-    pandas_result = pandas_result.reset_index()
-
-    # Make indexes same since we don't care about comparing them
-    full_result.index = pd.Index(data=range(0, full_result.shape[0]))
-    pandas_result.index = pd.Index(data=range(0, pandas_result.shape[0]))
+    pandas_result[group_col] = pandas_result[group_col].astype('category')
+    pandas_result = pandas_result.sort_values(by=group_col)
+    pandas_result = pandas_result.reset_index(drop=True)
 
     assert_frame_equal(full_result, pandas_result, check_less_precise=True)
 
