@@ -29,7 +29,7 @@ jobs:
           name: Copy Test Results
           when: always  # run even if previous run commands failed
           command: |
-            docker cp $(docker ps -q --filter volume=parqueryd_test-results):test-results test-results
+            docker cp $(docker ps -q --filter name=parqueryd_parqueryd_1):/srv/src/parqueryd/test-results test-results
       - run:
           name: Stop Services
           command: docker-compose down
