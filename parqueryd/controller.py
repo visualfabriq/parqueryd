@@ -200,6 +200,7 @@ class ControllerNode(object):
             msg_id = binascii.unhexlify(msg.get('token'))
             if 'data' in msg:
                 self.send(msg_id, msg['data'], is_rpc=True)
+                # remove the large data chunk from memory
                 del msg['data']
                 gc.collect()
             else:
