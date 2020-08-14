@@ -133,12 +133,12 @@ def test_compare_with_pandas_passenger_count_sum(taxi_df, rpc, shards):
     compare_with_pandas(taxi_df, rpc, shards, 'payment_type', 'passenger_count', 'sum')
 
 
-@pytest.skip('Skipping now as parquery does not implement means well yet')
+@pytest.mark.skip('Skipping now as parquery does not implement means well yet')
 def test_compare_with_pandas_total_amount_mean(taxi_df, rpc, shards):
     compare_with_pandas(taxi_df, rpc, shards, 'payment_type', 'total_amount', 'mean')
 
 
-@pytest.skip('Skipping now as parquery does not implement counts well yet')
+@pytest.mark.skip('Skipping now as parquery does not implement counts well yet')
 def test_compare_with_pandas_payment_type_count(taxi_df, rpc, shards):
     compare_with_pandas(taxi_df, rpc, shards, 'payment_type', 'passenger_count', 'count')
 
