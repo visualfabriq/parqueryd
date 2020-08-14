@@ -83,6 +83,7 @@ def shards(parquet_dir, taxi_df):
     step = len(taxi_df) // NR_SHARDS
     remainder = len(taxi_df) - step * NR_SHARDS
     count = 0
+    shard_filenames = []
     for idx in range(0, len(taxi_df), step):
         if count == NR_SHARDS - 1 and remainder >= 0:
             step += remainder
@@ -91,10 +92,10 @@ def shards(parquet_dir, taxi_df):
 
         shard_file = str(parquet_dir.join('tripdata_2016-01-%s.parquet' % count))
         df_to_parquet(taxi_df[idx:idx + step], shard_file)
-        shards.append(shard_file)
+        shard_filenames.append(shard_file)
         count += 1
 
-    yield shards
+    yield shard_filenames
 
 
 def test_rpc_info(rpc):
