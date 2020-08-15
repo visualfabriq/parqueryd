@@ -190,8 +190,6 @@ class ControllerNode(object):
                     pa_tables = [result_table for result_table in original_rpc['results'].values() if
                                  result_table is not None]
                     if pa_tables:
-                        for pa_table in pa_tables:
-                            print(pa_table.schema)
                         msg['data'] = serialize_pa_table(pa.concat_tables(pa_tables))
 
                     del self.rpc_segments[parent_token]
