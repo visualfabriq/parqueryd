@@ -2,6 +2,7 @@ import binascii
 import json
 import logging
 import os
+import pickle
 import random
 import time
 
@@ -132,7 +133,7 @@ class RPC(object):
             pa_table = deserialize_pa_table(result)
         except ArrowInvalid:
             # if it's not a pyarrow table, an error must have happened and we should have a string message
-            raise ValueError(result.get_from_binary('result'))
+            raise pickle.loads(result.get('result', '').decode('base64'))
 
         result_df = aggregate_pa(
             pa_table,
