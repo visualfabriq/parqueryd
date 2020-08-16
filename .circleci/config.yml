@@ -29,10 +29,10 @@ jobs:
           name: check running docker
           command: |
             docker ps
-      - run:
-          name: Copy Test Results
-          command: |
-            docker cp $(docker ps -q --filter name=parqueryd_parqueryd_1):/srv/src/parqueryd/test-results ./test-results
+#      - run:
+#          name: Copy Test Results
+#          command: |
+#            docker cp $(docker ps -q --filter name=parqueryd_parqueryd_1):/srv/src/parqueryd/test-results ./test-results
       - run:
           name: Stop Services
           command: docker-compose down
@@ -42,22 +42,47 @@ jobs:
           path: test-results
           destination: tr1
 
-#  build3:
-#    docker:
-#      - image: circleci/python:3.7.1
-#
-#    working_directory: ~/parqueryd
-#    steps:
-#      - checkout:
+  build3:
+    docker:
+      - image: circleci/python:3.7.1
+
+    working_directory: ~/parqueryd/
+    steps:
+      - checkout:
+          path: ~/parqueryd
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Check docker-compose version
+          command: |
+            docker -v
+            docker-compose -v
+      - run:
+          name: Start Services
+          command: |
+            docker-compose -f docker-compose.yml up --build -d
+      - run:
+          name: Sleep 30 seconds waiting for localstack service building
+          command: sleep 30
+      - run:
+          name: Run Tests
+          command: docker-compose -f docker-compose.yml run parqueryd pytest -v --junitxml=test-results/pytest/pytest-report.xml
+      - run:
+          name: check running docker
+          command: |
+            docker ps
 #      - run:
-#          name: Install Requirements
-#          command: sudo pip install -r requirements.txt
-#      - run:
-#          name: Install Module
-#          command: python setup.py build_ext --inplace && sudo python setup.py install
-#      - run:
-#          name: Run Tests
-#          command: pytest -vs parqueryd/tests/ --junitxml=test-results/pytest/pytest-report.xml
+#          name: Copy Test Results
+#          command: |
+#            docker cp $(docker ps -q --filter name=parqueryd_parqueryd_1):/srv/src/parqueryd/test-results ./test-results
+      - run:
+          name: Stop Services
+          command: docker-compose down
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
+          destination: tr1
 
 #      - run:
 #          name: Install Twine
@@ -74,6 +99,10 @@ workflows:
   build-and-release:
     jobs:
       - build27:
+          filters:
+            tags:
+              only: /[0-9]+(\.[0-9]+)*/
+      - build3:
           filters:
             tags:
               only: /[0-9]+(\.[0-9]+)*/
