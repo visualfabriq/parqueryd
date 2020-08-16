@@ -133,7 +133,10 @@ class RPC(object):
             pa_table = deserialize_pa_table(result)
         except ArrowInvalid:
             # if it's not a pyarrow table, an error must have happened and we should have a string message
-            raise pickle.loads(result.decode('base64'))
+            try:
+                raise ValueError(pickle.loads(result.decode('base64')))
+            except:
+                raise
 
         result_df = aggregate_pa(
             pa_table,
