@@ -159,7 +159,6 @@ def compare_with_pandas(taxi_df, rpc, shards, group_col, agg_col, method):
     else:
         assert False, "Unknown method: {}".format(method)
 
-    pandas_result[group_col] = pandas_result[group_col].astype('category')
     pandas_result = pandas_result.sort_values(by=group_col)
     pandas_result = pandas_result.reset_index(drop=True)
 
