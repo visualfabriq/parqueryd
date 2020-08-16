@@ -132,7 +132,7 @@ class RPC(object):
             pa_table = deserialize_pa_table(result)
         except ArrowInvalid:
             # if it's not a pyarrow table, an error must have happened and we should have a string message
-            raise ValueError(result)
+            raise ValueError(result.get_from_binary('result'))
 
         result_df = aggregate_pa(
             pa_table,
