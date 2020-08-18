@@ -520,8 +520,9 @@ class ControllerNode(object):
         data = {'msg_count_in': self.msg_count_in, 'node': self.node_name,
                 'workers': self.worker_map,
                 'worker_out_messages': [(k, len(v)) for k, v in self.worker_out_messages.items()],
-                'last_heartbeat': self.last_heartbeat, 'address': self.address,
-                'others': self.others, 'rpc_results_len': len(self.rpc_results),
+                'last_heartbeat': self.last_heartbeat, 'address': self.address.decode(),
+                'others': {k.decode():v for k, v in self.others.items()},
+                'rpc_results_len': len(self.rpc_results),
                 'uptime': int(time.time() - self.start_time), 'start_time': self.start_time
                 }
         return data
