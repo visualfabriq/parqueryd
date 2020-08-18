@@ -1,3 +1,7 @@
+Release  0.1.3
+=======================
+- Python 2/3 compatibility
+
 Release  0.1.2
 =======================
 - Parquery update

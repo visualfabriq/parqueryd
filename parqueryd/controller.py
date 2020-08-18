@@ -39,8 +39,8 @@ class ControllerNode(object):
         self.poller.register(self.socket, zmq.POLLIN | zmq.POLLOUT)
 
         self.node_name = socket.gethostname()
-        self.address = bind_to_random_port(self.socket, 'tcp://' + get_my_ip(),
-                                           min_port=14300, max_port=14399, max_tries=100).decode()
+        self.address = bytes((bind_to_random_port(self.socket, 'tcp://' + get_my_ip(),
+                                           min_port=14300, max_port=14399, max_tries=100).decode()).encode("utf-8"))
         with open(os.path.join(RUNFILES_LOCATION, 'parqueryd_controller.address'), 'w') as F:
             F.write(self.address)
         with open(os.path.join(RUNFILES_LOCATION, 'parqueryd_controller.pid'), 'w') as F:
