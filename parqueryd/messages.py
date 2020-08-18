@@ -1,7 +1,7 @@
 import pickle
 import json
 import time
-
+from parqueryd.tool import ens_bytes
 
 def msg_factory(msg):
     if type(msg) is str:
@@ -57,7 +57,7 @@ class Message(dict):
 
     def to_json(self):
         # We could do some serializiation fixes in here for things like datetime or other binary non-json-serializabe members
-        return json.dumps(self)
+        return ens_bytes(json.dumps(self))
 
     def set_args_kwargs(self, args, kwargs):
         params = {'args': args, 'kwargs': kwargs}

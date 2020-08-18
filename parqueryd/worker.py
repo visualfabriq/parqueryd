@@ -27,7 +27,7 @@ from parquery.transport import serialize_pa_table
 import parqueryd.config
 from parqueryd.messages import msg_factory, WorkerRegisterMessage, ErrorMessage, BusyMessage, StopMessage, \
     DoneMessage, TicketDoneMessage
-from parqueryd.tool import rm_file_or_dir
+from parqueryd.tool import rm_file_or_dir, ens_bytes
 
 DATA_FILE_EXTENSION = '.parquet'
 # timeout in ms : how long to wait for network poll, this also affects frequency of seeing new controllers and datafiles
@@ -44,7 +44,7 @@ class WorkerBase(object):
                  restart_check=True, azure_conn_string=None):
         if not os.path.exists(data_dir) or not os.path.isdir(data_dir):
             raise Exception("Datadir %s is not a valid directory" % data_dir)
-        self.worker_id = binascii.hexlify(os.urandom(8))
+        self.worker_id = binascii.hexlify(os.urandom(8)).decode()
         self.node_name = socket.gethostname()
         self.data_dir = data_dir
         self.data_files = set()
@@ -52,7 +52,7 @@ class WorkerBase(object):
         context = zmq.Context()
         self.socket = context.socket(zmq.ROUTER)
         self.socket.setsockopt(zmq.LINGER, 500)
-        self.socket.identity = self.worker_id
+        self.socket.identity = bytes((self.worker_id).encode("utf-8"))
         self.poller = zmq.Poller()
         self.poller.register(self.socket, zmq.POLLIN | zmq.POLLOUT)
         self.redis_server = redis.from_url(redis_url)
@@ -60,7 +60,7 @@ class WorkerBase(object):
         self.check_controllers()
         self.last_wrm = 0
         self.start_time = time.time()
-        self.logger = parqueryd.logger.getChild('worker ' + self.worker_id)
+        self.logger = parqueryd.logger.getChild('worker ' + str(self.worker_id))
         self.logger.setLevel(loglevel)
         self.msg_count = 0
         signal.signal(signal.SIGTERM, self.term_signal())
@@ -83,7 +83,7 @@ class WorkerBase(object):
             else:
                 self.socket.send_multipart([addr, msg.to_json()])
         except zmq.ZMQError as ze:
-            self.logger.critical("Problem with %s: %s" % (addr, ze))
+            self.logger.critical("Problem with %s: %s" % (str(addr), ze))
 
     def check_controllers(self):
         # Check the Redis set of controllers to see if any new ones have appeared,
@@ -91,7 +91,7 @@ class WorkerBase(object):
         listed_controllers = list(self.redis_server.smembers(parqueryd.config.REDIS_SET_KEY))
         current_controllers = []
         new_controllers = []
-        for k in self.controllers.keys()[:]:
+        for k in list(self.controllers.keys()):
             if k not in listed_controllers:
                 del self.controllers[k]
                 self.socket.disconnect(k)
@@ -101,7 +101,8 @@ class WorkerBase(object):
         new_controllers = [c for c in listed_controllers if c not in current_controllers]
         for controller_address in new_controllers:
             self.socket.connect(controller_address)
-            self.controllers[controller_address] = {'last_seen': 0, 'last_sent': 0, 'address': controller_address}
+            self.controllers[controller_address] = {'last_seen': 0, 'last_sent': 0,
+                                                    'address': controller_address.decode()}
 
     def check_datafiles(self):
         has_new_files = False
@@ -119,7 +120,7 @@ class WorkerBase(object):
         wrm['node'] = self.node_name
         wrm['data_files'] = list(self.data_files)
         wrm['data_dir'] = self.data_dir
-        wrm['controllers'] = self.controllers.values()
+        wrm['controllers'] = list(self.controllers.values())
         wrm['uptime'] = int(time.time() - self.start_time)
         wrm['msg_count'] = self.msg_count
         wrm['pid'] = os.getpid()

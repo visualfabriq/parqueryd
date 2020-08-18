@@ -2,6 +2,8 @@ import errno
 import os
 import shutil
 
+def ens_bytes(inp):
+    return bytes(inp.encode("utf-8"))
 
 def mkdir_p(path):
     try:

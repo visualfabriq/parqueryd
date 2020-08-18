@@ -17,6 +17,8 @@ import parqueryd.config
 from parqueryd.messages import msg_factory, Message, WorkerRegisterMessage, ErrorMessage, \
     BusyMessage, DoneMessage, StopMessage, TicketDoneMessage
 from parqueryd.util import get_my_ip, bind_to_random_port
+from parqueryd.tool import ens_bytes
+
 
 POLLING_TIMEOUT = 500  # timeout in ms : how long to wait for network poll, this also affects frequency of seeing new nodes
 DEAD_WORKER_TIMEOUT = 60  # time in seconds that we wait for a worker to respond before being removed
@@ -39,14 +41,14 @@ class ControllerNode(object):
         self.poller.register(self.socket, zmq.POLLIN | zmq.POLLOUT)
 
         self.node_name = socket.gethostname()
-        self.address = bytes((bind_to_random_port(self.socket, 'tcp://' + get_my_ip(),
-                                           min_port=14300, max_port=14399, max_tries=100).decode()).encode("utf-8"))
+        self.address = ens_bytes(bind_to_random_port(self.socket, 'tcp://' + get_my_ip(),
+                                           min_port=14300, max_port=14399, max_tries=100).decode())
         with open(os.path.join(RUNFILES_LOCATION, 'parqueryd_controller.address'), 'w') as F:
-            F.write(self.address)
+            F.write(str(self.address))
         with open(os.path.join(RUNFILES_LOCATION, 'parqueryd_controller.pid'), 'w') as F:
             F.write(str(os.getpid()))
 
-        self.logger = parqueryd.logger.getChild('controller').getChild(self.address)
+        self.logger = parqueryd.logger.getChild('controller').getChild(str(self.address))
         self.logger.setLevel(loglevel)
 
         self.msg_count_in = 0
@@ -97,7 +99,7 @@ class ControllerNode(object):
                     self.redis_server.srem(parqueryd.config.REDIS_SET_KEY, x)
                     del self.others[x]
         # Disconnect from controllers not in current set
-        for x in self.others.keys()[:]:  # iterate over a copy of keys so we can remove entries
+        for x in list(self.others.keys()):  # iterate over a copy of keys so we can remove entries
             if x not in all_servers:
                 self.logger.critical('Disconnecting from %s' % x)
                 try:
