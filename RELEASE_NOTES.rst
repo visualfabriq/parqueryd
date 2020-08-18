@@ -1,3 +1,7 @@
+Release  0.1.2
+=======================
+- Parquery update
+
 Release  0.1.1
 =======================
 - Parquery update
