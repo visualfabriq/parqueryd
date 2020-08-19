@@ -18,11 +18,7 @@ def msg_factory(msg):
                    'busy': BusyMessage, 'done': DoneMessage,
                    'ticketdone': TicketDoneMessage,
                    'stop': StopMessage, None: Message}
-    try:
-        msg_class = msg_mapping.get(msg.get('msg_type'))
-    except:
-        print(msg)
-        raise
+    msg_class = msg_mapping.get(msg.get('msg_type'))
     return msg_class(msg)
 
 

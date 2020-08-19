@@ -136,6 +136,8 @@ class RPC(object):
         except ArrowInvalid:
             # if it's not a pyarrow table, an error must have happened and we should have a string message
             try:
+                if isinstance(result, dict) and result.get('result'):
+                    result = result['result']
                 raise ValueError(result)
             except:
                 raise
