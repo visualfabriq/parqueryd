@@ -69,7 +69,7 @@ class ControllerNode(object):
                 self.handle_peer(addr, msg_factory(msg_buf))
                 return
             if is_rpc:
-                tmp = [addr, '', msg_buf]
+                tmp = [addr, b'', msg_buf]
             else:
                 tmp = [addr, msg_buf]
             self.socket.send_multipart(tmp)
