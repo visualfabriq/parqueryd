@@ -2,12 +2,13 @@ import base64
 import json
 import pickle
 import time
+from parqueryd.tool import ens_bytes
 
 
 def msg_factory(msg):
-    if type(msg) is str:
+    if isinstance(msg, bytes):
         try:
-            msg = json.loads(msg)
+            msg = json.loads(msg.decode())
         except:
             msg is None
     if not msg:
@@ -52,9 +53,6 @@ class Message(dict):
             return True
         return False
 
-    def add_as_binary(self, key, value):
-        self[key] = base64.b64encode(pickle.dumps(value)).decode()
-
     def get_from_binary(self, key, default=None):
         buf = self.get(key)
         if not buf:
@@ -63,14 +61,14 @@ class Message(dict):
 
     def to_json(self):
         # We could do some serializiation fixes in here for things like datetime or other binary non-json-serializabe members
-        return json.dumps(self)
+        return ens_bytes(json.dumps(self))
 
     def set_args_kwargs(self, args, kwargs):
         params = {'args': args, 'kwargs': kwargs}
-        self.add_as_binary('params', params)
+        self['params'] = params
 
     def get_args_kwargs(self):
-        params = self.get_from_binary('params', {})
+        params = self.get('params', {})
         kwargs = params.get('kwargs', {})
         args = params.get('args', [])
         return args, kwargs

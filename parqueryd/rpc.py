@@ -38,7 +38,7 @@ class RPC(object):
         redis_server = redis.from_url(redis_url)
         self.retries = retries
         self.timeout = timeout
-        self.identity = binascii.hexlify(os.urandom(8))
+        self.identity = binascii.hexlify(os.urandom(8)).decode()
 
         if not address:
             # Bind to a random controller
@@ -91,7 +91,7 @@ class RPC(object):
 
             # We do not want string args to be converted into unicode by the JSON machinery
             msg = RPCMessage({'payload': name})
-            msg.add_as_binary('params', params)
+            msg['params'] = params
             rep = None
             for x in range(self.retries):
                 try:
@@ -116,7 +116,7 @@ class RPC(object):
                                                            aggregate=kwargs.get('aggregate', False))
                 else:
                     rep = msg_factory(json.loads(rep))
-                    result = rep.get_from_binary('result')
+                    result = rep.get('result', {})
             except (ValueError, TypeError):
                 self.logger.exception('Could not use RPC method: {}/{}'.format(name, rep))
                 result = rep

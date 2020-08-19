@@ -90,8 +90,7 @@ class ControllerNode(object):
                 self.socket.connect(x)
                 self.others[x] = {'connect_time': time.time()}
             else:
-                msg = Message({'payload': 'info'})
-                msg.add_as_binary('result', self.get_info())
+                msg = Message({'payload': 'info', 'result': self.get_info()})
                 try:
                     self.socket.send_multipart([x, msg.to_json()])
                 except zmq.error.ZMQError as e:
@@ -282,7 +281,7 @@ class ControllerNode(object):
             self.logger.info("Set loglevel to %s" % loglevel)
         elif msg.isa('info'):
             # Another node registered with you and is sending some info
-            data = msg.get_from_binary('result', default={})
+            data = msg.get('result', {})
             addr = data.get('address')
             node = data.get('node')
             uptime = data.get('uptime')
@@ -352,7 +351,7 @@ class ControllerNode(object):
 
     def handle_rpc(self, sender, msg):
         # RPC calls have a binary identiy set, hexlify it to make it readable and serializable
-        msg_id = binascii.hexlify(sender)
+        msg_id = binascii.hexlify(sender).decode()
         msg['token'] = msg_id
         # self.logger.debug('RPC received %s' % msg_id)
 
@@ -412,11 +411,11 @@ class ControllerNode(object):
             else:
                 result = "Sleep needs an int or list of ints as arg[0]"
         elif msg['payload'] in ('groupby',):
-            result = self.handle_calc_message(
-                msg)  # if result is not None something happened, return to caller immediately
+            # if result is not None something happened, return to caller immediately
+            result = self.handle_calc_message(msg)
 
         if result:
-            msg.add_as_binary('result', result)
+            msg['result'] = result
             self.rpc_results.append(msg)
 
     def setup_download(self, msg):
@@ -433,7 +432,7 @@ class ControllerNode(object):
         else:
             filenames = ['s3://%s/%s' % (bucket, filename) for filename in filenames]
 
-        ticket = binascii.hexlify(os.urandom(8))  # track all downloads using a ticket
+        ticket = binascii.hexlify(os.urandom(8)).decode()  # track all downloads using a ticket
         for filename in filenames:
 
             # get all node names from others + self
@@ -451,7 +450,7 @@ class ControllerNode(object):
                                        progress_slot)
 
         if wait:
-            msg.add_as_binary('result', ticket)
+            msg['result'] = ticket
             self.rpc_segments[ticket] = msg
             return None
 
@@ -485,11 +484,11 @@ class ControllerNode(object):
             params['args'] = list(args)
             params['args'][0] = filename
             params['kwargs'] = kwargs
-            msg.add_as_binary('params', params)
+            msg['params'] = params
 
             # Make up a new token for the message sent to the workers, and collect the responses using that id
             msg['parent_token'] = parent_token
-            new_token = binascii.hexlify(os.urandom(8))
+            new_token = binascii.hexlify(os.urandom(8)).decode()
             msg['token'] = new_token
             rpc_segment['filenames'][filename] = new_token
             self.worker_out_messages.setdefault(affinity, []).append(msg.copy())

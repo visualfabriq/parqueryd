@@ -219,7 +219,7 @@ class WorkerBase(object):
             time.sleep(float(args[0]))
             snore = 'z' * random.randint(1, 20)
             self.logger.debug(snore)
-            msg.add_as_binary('result', snore)
+            msg['result'] = snore
         else:
             msg = self.handle_work(msg)
             self.msg_count += 1
@@ -262,7 +262,7 @@ class WorkerNode(WorkerBase):
         self.logger.debug('args: %s kwargs: %s' % (func_args, func_kwargs))
         result = function(*func_args, **func_kwargs)
 
-        msg.add_as_binary('result', result)
+        msg['result'] = result
         return msg
 
     def handle_work(self, msg):
