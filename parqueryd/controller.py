@@ -117,7 +117,7 @@ class ControllerNode(object):
         free_workers = []
         free_local_workers = []
 
-        for worker_id, worker in self.worker_map.items():
+        for worker_id, worker in self.worker_map.copy().items():
             # ignore downloader workers
             if worker.get('workertype') in ('download', 'moveparquet'):
                 continue
@@ -536,7 +536,7 @@ class ControllerNode(object):
 
     def free_dead_workers(self):
         now = time.time()
-        for worker_id, worker in self.worker_map.items():
+        for worker_id, worker in self.worker_map.copy().items():
             if (now - worker.get('last_seen', now)) > DEAD_WORKER_TIMEOUT:
                 self.remove_worker(worker_id)
 
