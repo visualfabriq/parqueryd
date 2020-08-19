@@ -1,3 +1,4 @@
+import base64
 import binascii
 import json
 import logging
@@ -5,7 +6,6 @@ import os
 import pickle
 import random
 import time
-import base64
 
 import redis
 import zmq
@@ -15,6 +15,7 @@ from pyarrow import ArrowInvalid
 
 import parqueryd.config
 from parqueryd.messages import msg_factory, RPCMessage, ErrorMessage
+from parqueryd.tool import ens_bytes
 
 try:
     from cStringIO import StringIO
@@ -58,7 +59,7 @@ class RPC(object):
             tmp_sock = self.context.socket(zmq.REQ)
             tmp_sock.setsockopt(zmq.RCVTIMEO, 2000)
             tmp_sock.setsockopt(zmq.LINGER, 0)
-            tmp_sock.identity = self.identity
+            tmp_sock.identity = ens_bytes(self.identity)
             tmp_sock.connect(c)
             # first ping the controller to see if it responds at all
             msg = RPCMessage({'payload': 'ping'})
