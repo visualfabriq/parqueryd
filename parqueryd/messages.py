@@ -2,6 +2,8 @@ import pickle
 import json
 import time
 from parqueryd.tool import ens_bytes
+import base64
+
 
 def msg_factory(msg):
     if type(msg) is str:
@@ -48,12 +50,12 @@ class Message(dict):
         return False
 
     def add_as_binary(self, key, value):
-        self[key] = pickle.dumps(value).encode('base64')
+        self[key] = base64.b64encode(pickle.dumps(value))
 
     def get_from_binary(self, key, default=None):
         buf = self.get(key)
         if not buf: return default
-        return pickle.loads(buf.decode('base64'))
+        return pickle.loads(base64.b64decode(buf))
 
     def to_json(self):
         # We could do some serializiation fixes in here for things like datetime or other binary non-json-serializabe members
