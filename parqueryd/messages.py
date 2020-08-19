@@ -18,7 +18,11 @@ def msg_factory(msg):
                    'busy': BusyMessage, 'done': DoneMessage,
                    'ticketdone': TicketDoneMessage,
                    'stop': StopMessage, None: Message}
-    msg_class = msg_mapping.get(msg.get('msg_type'))
+    try:
+        msg_class = msg_mapping.get(msg.get('msg_type'))
+    except:
+        print(msg)
+        raise
     return msg_class(msg)
 
 
@@ -60,7 +64,7 @@ class Message(dict):
 
     def to_json(self):
         # We could do some serializiation fixes in here for things like datetime or other binary non-json-serializabe members
-        return ens_bytes(json.dumps(self))
+        return json.dumps(self)
 
     def set_args_kwargs(self, args, kwargs):
         params = {'args': args, 'kwargs': kwargs}
