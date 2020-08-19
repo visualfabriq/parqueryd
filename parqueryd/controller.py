@@ -16,9 +16,8 @@ import parqueryd
 import parqueryd.config
 from parqueryd.messages import msg_factory, Message, WorkerRegisterMessage, ErrorMessage, \
     BusyMessage, DoneMessage, StopMessage, TicketDoneMessage
-from parqueryd.util import get_my_ip, bind_to_random_port
 from parqueryd.tool import ens_bytes
-
+from parqueryd.util import get_my_ip, bind_to_random_port
 
 POLLING_TIMEOUT = 500  # timeout in ms : how long to wait for network poll, this also affects frequency of seeing new nodes
 DEAD_WORKER_TIMEOUT = 60  # time in seconds that we wait for a worker to respond before being removed
@@ -42,7 +41,7 @@ class ControllerNode(object):
 
         self.node_name = socket.gethostname()
         self.address = ens_bytes(bind_to_random_port(self.socket, 'tcp://' + get_my_ip(),
-                                           min_port=14300, max_port=14399, max_tries=100).decode())
+                                                     min_port=14300, max_port=14399, max_tries=100))
         with open(os.path.join(RUNFILES_LOCATION, 'parqueryd_controller.address'), 'w') as F:
             F.write(str(self.address))
         with open(os.path.join(RUNFILES_LOCATION, 'parqueryd_controller.pid'), 'w') as F:
@@ -97,6 +96,7 @@ class ControllerNode(object):
                     self.logger.critical('Removing %s due to %s' % (x, e))
                     self.redis_server.srem(parqueryd.config.REDIS_SET_KEY, x)
                     del self.others[x]
+
         # Disconnect from controllers not in current set
         for x in list(self.others.keys()):  # iterate over a copy of keys so we can remove entries
             if x not in all_servers:
@@ -520,7 +520,7 @@ class ControllerNode(object):
                 'workers': self.worker_map,
                 'worker_out_messages': [(k, len(v)) for k, v in self.worker_out_messages.items()],
                 'last_heartbeat': self.last_heartbeat, 'address': self.address.decode(),
-                'others': {k.decode():v for k, v in self.others.items()},
+                'others': {k.decode(): v for k, v in self.others.items()},
                 'rpc_results_len': len(self.rpc_results),
                 'uptime': int(time.time() - self.start_time), 'start_time': self.start_time
                 }
