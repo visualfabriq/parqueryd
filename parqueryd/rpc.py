@@ -5,6 +5,7 @@ import os
 import pickle
 import random
 import time
+import base64
 
 import redis
 import zmq
@@ -134,7 +135,7 @@ class RPC(object):
         except ArrowInvalid:
             # if it's not a pyarrow table, an error must have happened and we should have a string message
             try:
-                raise ValueError(pickle.loads(result.decode('base64')))
+                raise ValueError(pickle.loads(base64.b64decode(result)))
             except:
                 raise
 
