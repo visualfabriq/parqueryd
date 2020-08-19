@@ -258,7 +258,7 @@ class ControllerNode(object):
         data = self.socket.recv_multipart()
         binary, sender = None, None  # initialise outside for edge cases
         if len(data) == 3:
-            if data[1] == '':  # This is a RPC call from a zmq.REQ socket
+            if data[1] == b'':  # This is a RPC call from a zmq.REQ socket
                 sender, _blank, msg_buf = data
                 self.handle_rpc(sender, msg_factory(msg_buf))
                 return
