@@ -50,11 +50,12 @@ class Message(dict):
         return False
 
     def add_as_binary(self, key, value):
-        self[key] = base64.b64encode(pickle.dumps(value))
+        self[key] = base64.b64encode(pickle.dumps(value)).decode()
 
     def get_from_binary(self, key, default=None):
         buf = self.get(key)
-        if not buf: return default
+        if not buf:
+            return default
         return pickle.loads(base64.b64decode(buf))
 
     def to_json(self):
