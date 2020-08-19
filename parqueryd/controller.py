@@ -286,8 +286,8 @@ class ControllerNode(object):
             node = data.get('node')
             uptime = data.get('uptime')
             if addr and node:
-                self.others[addr]['node'] = node
-                self.others[addr]['uptime'] = uptime
+                self.others[ens_bytes(addr)]['node'] = node
+                self.others[ens_bytes(addr)]['uptime'] = uptime
             else:
                 self.logger.critical("bogus Info message received from %s %s", sender, msg)
         else:
