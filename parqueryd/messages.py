@@ -1,8 +1,7 @@
-import pickle
-import json
-import time
-from parqueryd.tool import ens_bytes
 import base64
+import json
+import pickle
+import time
 
 
 def msg_factory(msg):
@@ -33,7 +32,7 @@ class MalformedMessage(Exception):
 class Message(dict):
     msg_type = None
 
-    def __init__(self, datadict={}):
+    def __init__(self, datadict=None):
         if datadict is None:
             datadict = {}
         self.update(datadict)
