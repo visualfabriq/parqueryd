@@ -249,7 +249,10 @@ class WorkerNode(WorkerBase):
     def execute_code(self, msg):
         args, kwargs = msg.get_args_kwargs()
 
-        func_fully_qualified_name = kwargs['function'].split('.')
+        if isinstance(kwargs['function'], bytes):
+            func_fully_qualified_name = kwargs['function'].decode().split('.')
+        else:
+            func_fully_qualified_name = kwargs['function'].split('.')
         module_name = '.'.join(func_fully_qualified_name[:-1])
         func_name = func_fully_qualified_name[-1]
         func_args = kwargs.get("args", [])
@@ -326,14 +329,20 @@ class DownloaderNode(WorkerBase):
             random.shuffle(ticket_details_items)
 
             for node_filename_slot, progress_slot in ticket_details_items:
-                tmp = node_filename_slot.split('_')
+                if isinstance(node_filename_slot, bytes):
+                    tmp = node_filename_slot.decode().split('_')
+                else:
+                    tmp = node_filename_slot.split('_')
                 if len(tmp) < 2:
                     self.logger.critical("Bogus node_filename_slot %s", node_filename_slot)
                     continue
                 node = tmp[0]
                 filename = '_'.join(tmp[1:])
 
-                tmp = progress_slot.split('_')
+                if isinstance(progress_slot, bytes):
+                    tmp = progress_slot.decode().split('_')
+                else:
+                    tmp = progress_slot.split('_')
                 if len(tmp) != 2:
                     self.logger.critical("Bogus progress_slot %s", progress_slot)
                     continue
@@ -390,7 +399,10 @@ class DownloaderNode(WorkerBase):
             self._download_file_aws(ticket, fileurl)
 
     def _download_file_aws(self, ticket, fileurl):
-        tmp = fileurl.replace('s3://', '').split('/')
+        if isinstance(fileurl, bytes):
+            tmp = fileurl.replace('s3://', '').decode().split('/')
+        else:
+            tmp = fileurl.replace('s3://', '').split('/')
         bucket = tmp[0]
         filename = '/'.join(tmp[1:])
 
@@ -451,7 +463,10 @@ class DownloaderNode(WorkerBase):
         return access_key, secret_key, s3_conn
 
     def _download_file_azure(self, ticket, fileurl):
-        tmp = fileurl.replace('azure://', '').split('/')
+        if isinstance(fileurl, bytes):
+            tmp = fileurl.decode().replace('azure://', '').split('/')
+        else:
+            tmp = fileurl.replace('azure://', '').split('/')
         container_name = tmp[0]
         blob_name = tmp[1]
         incoming_file = self._get_temp_name(ticket, blob_name)
@@ -533,14 +548,20 @@ class MoveparquetNode(DownloaderNode):
             ticket_on_this_node = False
 
             for node_filename_slot, progress_slot in ticket_details_items:
-                tmp = node_filename_slot.split('_')
+                if isinstance(node_filename_slot, bytes):
+                    tmp = node_filename_slot.decode().split('_')
+                else:
+                    tmp = node_filename_slot.split('_')
                 if len(tmp) < 2:
                     self.logger.critical("Bogus node_filename_slot %s", node_filename_slot)
                     continue
                 node = tmp[0]
                 filename = '_'.join(tmp[1:])
 
-                tmp = progress_slot.split('_')
+                if isinstance(progress_slot, bytes):
+                    tmp = progress_slot.decode().split('_')
+                else:
+                    tmp = progress_slot.split('_')
                 if len(tmp) != 2:
                     self.logger.critical("Bogus progress_slot %s", progress_slot)
                     continue
