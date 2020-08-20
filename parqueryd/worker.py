@@ -498,12 +498,12 @@ class DownloaderNode(WorkerBase):
     def remove_ticket(self, ticket):
         # Remove all Redis entries for this node and ticket
         # it can't be done per file as we don't have the bucket name from which a file was downloaded
+        ticket = ens_unicode(ticket)
         self.logger.debug('Removing ticket %s from redis', ticket)
-        for node_filename_slot in self.redis_server.hgetall(parqueryd.config.REDIS_TICKET_KEY_PREFIX +
-                                                            ens_unicode(ticket)):
+        for node_filename_slot in self.redis_server.hgetall(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket):
             if ens_unicode(node_filename_slot).startswith(ens_unicode(self.node_name)):
-                self.logger.debug('Removing ticket_%s %s', ens_unicode(ticket), ens_unicode(node_filename_slot))
-                self.redis_server.hdel(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ens_unicode(ticket),
+                self.logger.debug('Removing ticket_%s %s', ticket, ens_unicode(node_filename_slot))
+                self.redis_server.hdel(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket,
                                        ens_unicode(node_filename_slot))
         tdm = TicketDoneMessage({'ticket': ticket})
         self.send_to_all(tdm)
