@@ -391,7 +391,7 @@ class DownloaderNode(WorkerBase):
                             (ens_unicode(ticket), ens_unicode(node_filename_slot)))
         # A progress slot contains a timestamp_filesize
         progress_slot = '%s_%s' % (time.time(), ens_unicode(progress))
-        self.redis_server.hset(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket,
+        self.redis_server.hset(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ens_unicode(ticket),
                                ens_unicode(node_filename_slot),
                                progress_slot)
 
@@ -399,6 +399,9 @@ class DownloaderNode(WorkerBase):
         return {}
 
     def download_file(self, ticket, fileurl):
+        ticket = ens_unicode(ticket)
+        fileurl = ens_unicode(fileurl)
+
         if self.azure_conn_string:
             self._download_file_azure(ticket, fileurl)
         else:
@@ -451,7 +454,7 @@ class DownloaderNode(WorkerBase):
         self.file_downloader_progress(ticket, fileurl, 'DONE')
 
     def _get_prod_name(self, file_name):
-        return os.path.join(parqueryd.config.DEFAULT_DATA_DIR, file_name)
+        return os.path.join(parqueryd.config.DEFAULT_DATA_DIR, ens_unicode(file_name))
 
     def _get_temp_name(self, ticket, file_name):
         return os.path.join(parqueryd.config.INCOMING, ens_unicode(ticket) + '_' + ens_unicode(file_name))
