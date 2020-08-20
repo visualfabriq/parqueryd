@@ -501,8 +501,8 @@ class DownloaderNode(WorkerBase):
         self.logger.debug('Removing ticket %s from redis', ticket)
         for node_filename_slot in self.redis_server.hgetall(parqueryd.config.REDIS_TICKET_KEY_PREFIX +
                                                             ens_unicode(ticket)):
-            if node_filename_slot.startswith(self.node_name):
-                self.logger.debug('Removing ticket_%s %s', ticket, node_filename_slot)
+            if ens_unicode(node_filename_slot).startswith(ens_unicode(self.node_name)):
+                self.logger.debug('Removing ticket_%s %s', ens_unicode(ticket), ens_unicode(node_filename_slot))
                 self.redis_server.hdel(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ens_unicode(ticket),
                                        ens_unicode(node_filename_slot))
         tdm = TicketDoneMessage({'ticket': ticket})
