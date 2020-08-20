@@ -1,6 +1,5 @@
 import binascii
 import datetime
-import errno
 import gc
 import glob
 import importlib
@@ -27,7 +26,7 @@ from parquery.transport import serialize_pa_table
 import parqueryd.config
 from parqueryd.messages import msg_factory, WorkerRegisterMessage, ErrorMessage, BusyMessage, StopMessage, \
     DoneMessage, TicketDoneMessage
-from parqueryd.tool import rm_file_or_dir, ens_bytes
+from parqueryd.tool import rm_file_or_dir, ens_unicode
 
 DATA_FILE_EXTENSION = '.parquet'
 # timeout in ms : how long to wait for network poll, this also affects frequency of seeing new controllers and datafiles
@@ -60,7 +59,7 @@ class WorkerBase(object):
         self.check_controllers()
         self.last_wrm = 0
         self.start_time = time.time()
-        self.logger = parqueryd.logger.getChild('worker ' + str(self.worker_id))
+        self.logger = parqueryd.logger.getChild('worker ' + ens_unicode(self.worker_id))
         self.logger.setLevel(loglevel)
         self.msg_count = 0
         signal.signal(signal.SIGTERM, self.term_signal())
@@ -357,7 +356,11 @@ class DownloaderNode(WorkerBase):
 
                 try:
                     # acquire a lock for this node_filename
-                    lock_key = parqueryd.config.REDIS_DOWNLOAD_LOCK_PREFIX + self.node_name + ticket + filename
+                    lock_key = ''.join([ens_unicode(x) for x in
+                                        (parqueryd.config.REDIS_DOWNLOAD_LOCK_PREFIX,
+                                         self.node_name,
+                                         ticket,
+                                         filename)])
                     lock = self.redis_server.lock(lock_key, timeout=parqueryd.config.REDIS_DOWNLOAD_LOCK_DURATION)
                     if lock.acquire(False):
                         self.download_file(ticket, filename)
@@ -374,20 +377,23 @@ class DownloaderNode(WorkerBase):
                         pass
 
     def file_downloader_progress(self, ticket, filename, progress):
-        node_filename_slot = '%s_%s' % (self.node_name, filename)
+        node_filename_slot = '%s_%s' % (ens_unicode(self.node_name), ens_unicode(filename))
         # Check to see if the progress slot exists at all, if it does not exist this ticket has been cancelled
         # by some kind of intervention, stop the download and clean up.
-        tmp = self.redis_server.hget(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot)
+        tmp = self.redis_server.hget(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ens_unicode(ticket), node_filename_slot)
         if not tmp:
             # Clean up the whole ticket contents from disk
-            ticket_path = os.path.join(parqueryd.config.INCOMING, ticket)
-            self.logger.debug('Now removing entire ticket %s', ticket_path)
+            ticket_path = os.path.join(parqueryd.config.INCOMING, ens_unicode(ticket))
+            self.logger.debug('Now removing entire ticket %s', ens_unicode(ticket_path))
             for filename in glob.glob(ticket_path + '*'):
-                rm_file_or_dir(os.path.join(parqueryd.config.INCOMING, filename))
-            raise Exception("Ticket %s progress slot %s not found, aborting download" % (ticket, node_filename_slot))
+                rm_file_or_dir(os.path.join(parqueryd.config.INCOMING, ens_unicode(filename)))
+            raise Exception("Ticket %s progress slot %s not found, aborting download" %
+                            (ens_unicode(ticket), ens_unicode(node_filename_slot)))
         # A progress slot contains a timestamp_filesize
-        progress_slot = '%s_%s' % (time.time(), progress)
-        self.redis_server.hset(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot, progress_slot)
+        progress_slot = '%s_%s' % (time.time(), ens_unicode(progress))
+        self.redis_server.hset(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket,
+                               ens_unicode(node_filename_slot),
+                               progress_slot)
 
     def _get_transport_params(self):
         return {}
@@ -400,7 +406,7 @@ class DownloaderNode(WorkerBase):
 
     def _download_file_aws(self, ticket, fileurl):
         if isinstance(fileurl, bytes):
-            tmp = fileurl.replace('s3://', '').decode().split('/')
+            tmp = fileurl.replace(b's3://', b'').decode().split('/')
         else:
             tmp = fileurl.replace('s3://', '').split('/')
         bucket = tmp[0]
@@ -448,7 +454,7 @@ class DownloaderNode(WorkerBase):
         return os.path.join(parqueryd.config.DEFAULT_DATA_DIR, file_name)
 
     def _get_temp_name(self, ticket, file_name):
-        return os.path.join(parqueryd.config.INCOMING, ticket + '_' + file_name)
+        return os.path.join(parqueryd.config.INCOMING, ens_unicode(ticket) + '_' + ens_unicode(file_name))
 
     def _get_s3_conn(self):
         """Create a boto3 """
@@ -493,10 +499,12 @@ class DownloaderNode(WorkerBase):
         # Remove all Redis entries for this node and ticket
         # it can't be done per file as we don't have the bucket name from which a file was downloaded
         self.logger.debug('Removing ticket %s from redis', ticket)
-        for node_filename_slot in self.redis_server.hgetall(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket):
+        for node_filename_slot in self.redis_server.hgetall(parqueryd.config.REDIS_TICKET_KEY_PREFIX +
+                                                            ens_unicode(ticket)):
             if node_filename_slot.startswith(self.node_name):
                 self.logger.debug('Removing ticket_%s %s', ticket, node_filename_slot)
-                self.redis_server.hdel(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot)
+                self.redis_server.hdel(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ens_unicode(ticket),
+                                       ens_unicode(node_filename_slot))
         tdm = TicketDoneMessage({'ticket': ticket})
         self.send_to_all(tdm)
 
@@ -507,7 +515,7 @@ class MoveparquetNode(DownloaderNode):
     def moveparquet(self, ticket):
         # A notification from the controller that all files are downloaded on all nodes,
         # the files in this ticket can be moved into place
-        ticket_path = os.path.join(parqueryd.config.INCOMING, ticket + '_*')
+        ticket_path = os.path.join(parqueryd.config.INCOMING, ens_unicode(ticket) + '_*')
         file_name_list = glob.glob(ticket_path)
         if file_name_list:
             for filename in file_name_list:

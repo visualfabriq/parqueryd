@@ -8,6 +8,14 @@ def ens_bytes(inp):
     else:
         return bytes(inp.encode("utf-8"))
 
+
+def ens_unicode(inp):
+    if isinstance(inp, bytes):
+        return inp.decode()
+    else:
+        return inp
+
+
 def mkdir_p(path):
     try:
         os.makedirs(path)
