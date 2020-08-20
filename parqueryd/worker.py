@@ -516,6 +516,8 @@ class MoveparquetNode(DownloaderNode):
     workertype = 'moveparquet'
 
     def moveparquet(self, ticket):
+        ticket = ens_unicode(ticket)
+
         # A notification from the controller that all files are downloaded on all nodes,
         # the files in this ticket can be moved into place
         ticket_path = os.path.join(parqueryd.config.INCOMING, ens_unicode(ticket) + '_*')
