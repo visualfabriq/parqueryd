@@ -520,7 +520,7 @@ class MoveparquetNode(DownloaderNode):
 
         # A notification from the controller that all files are downloaded on all nodes,
         # the files in this ticket can be moved into place
-        ticket_path = os.path.join(parqueryd.config.INCOMING, ens_unicode(ticket) + '_*')
+        ticket_path = os.path.join(parqueryd.config.INCOMING, ticket + '_*')
         file_name_list = glob.glob(ticket_path)
         if file_name_list:
             for filename in file_name_list:
@@ -539,7 +539,7 @@ class MoveparquetNode(DownloaderNode):
                             }
                 open(metadata_filepath, 'w').write(json.dumps(metadata, indent=2))
 
-                self.logger.debug("Moving %s %s" % (incoming_path, prod_path))
+                self.logger.debug("Moving %s to %s" % (incoming_path, prod_path))
                 shutil.move(incoming_path, prod_path)
         else:
             self.logger.debug('Doing a moveparquet for files %s which do not exist', ticket_path)

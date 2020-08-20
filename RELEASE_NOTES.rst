@@ -1,4 +1,4 @@
-Release  0.1.3-0.1.21
+Release  0.1.3-0.1.22
 =======================
 - Python 2/3 compatibility
 

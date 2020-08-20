@@ -16,7 +16,7 @@ import parqueryd
 import parqueryd.config
 from parqueryd.messages import msg_factory, Message, WorkerRegisterMessage, ErrorMessage, \
     BusyMessage, DoneMessage, StopMessage, TicketDoneMessage
-from parqueryd.tool import ens_bytes
+from parqueryd.tool import ens_bytes, ens_unicode
 from parqueryd.util import get_my_ip, bind_to_random_port
 
 POLLING_TIMEOUT = 500  # timeout in ms : how long to wait for network poll, this also affects frequency of seeing new nodes
@@ -47,7 +47,7 @@ class ControllerNode(object):
         with open(os.path.join(RUNFILES_LOCATION, 'parqueryd_controller.pid'), 'w') as F:
             F.write(str(os.getpid()))
 
-        self.logger = parqueryd.logger.getChild('controller').getChild(str(self.address))
+        self.logger = parqueryd.logger.getChild('controller').getChild(ens_unicode(self.address))
         self.logger.setLevel(loglevel)
 
         self.msg_count_in = 0
