@@ -148,7 +148,6 @@ class ControllerNode(object):
     def process_sink_results(self):
         while self.rpc_results:
             msg = self.rpc_results.pop()
-            msg_id = binascii.unhexlify(msg.get('token'))
 
             # If this was a message to be combined, there should be a parent_token
             if 'parent_token' in msg:
@@ -166,6 +165,7 @@ class ControllerNode(object):
                         # If any of the segment workers return an error,
                         # Send the exception on to the calling RPC
                         msg['token'] = parent_token
+                        msg_id = binascii.unhexlify(parent_token)
                         try:
                             self.send(msg_id, msg.to_json(), is_rpc=True)
                         except TypeError:
@@ -215,6 +215,7 @@ class ControllerNode(object):
                     # This was a segment result move on
                     continue
 
+            msg_id = binascii.unhexlify(msg.get('token'))
             if 'data' in msg:
                 self.send(msg_id, msg['data'], is_rpc=True)
                 gc.collect()
@@ -329,7 +330,7 @@ class ControllerNode(object):
         self.worker_map.setdefault(worker_id, {})['last_seen'] = time.time()
 
         if msg.isa(WorkerRegisterMessage):
-            self.logger.debug('Worker registered %s', worker_id)
+            # self.logger.debug('Worker registered %s', ens_unicode(worker_id))
             for filename in msg.get('data_files', []):
                 self.files_map.setdefault(filename, set()).add(worker_id)
             self.worker_map[worker_id]['node'] = msg.get('node', '...')
@@ -339,12 +340,12 @@ class ControllerNode(object):
             return
 
         if msg.isa(BusyMessage):
-            self.logger.debug('Worker %s sent BusyMessage', worker_id)
+            self.logger.debug('Worker %s sent BusyMessage', ens_unicode(worker_id))
             self.worker_map[worker_id]['busy'] = True
             return
 
         if msg.isa(DoneMessage):
-            self.logger.debug('Worker %s sent DoneMessage', worker_id)
+            self.logger.debug('Worker %s sent DoneMessage', ens_unicode(worker_id))
             self.worker_map[worker_id]['busy'] = False
             return
 
@@ -370,11 +371,14 @@ class ControllerNode(object):
         if 'token' in msg:
             # A message might have been passed on to a worker for processing and needs to be returned to
             #  the relevant caller so it goes in the rpc_results list
-            self.logger.debug('Received result for token %s' % ens_unicode(msg['token']))
+            dbg_msg = 'Appending to queue a result for token ' + ens_unicode(msg['token'])
+            if msg.get('parent_token'):
+                dbg_msg += ' (' + ens_unicode(msg['parent_token']) + ')'
+            self.logger.debug(dbg_msg)
             self.rpc_results.append(msg)
 
     def handle_rpc(self, sender, msg):
-        # RPC calls have a binary identiy set, hexlify it to make it readable and serializable
+        # RPC calls have a binary identity set, hexlify it to make it readable and serializable
         msg_id = binascii.hexlify(sender).decode()
         msg['token'] = msg_id
         # self.logger.debug('RPC received %s' % msg_id)
@@ -497,26 +501,29 @@ class ControllerNode(object):
             if filename and filename not in self.files_map:
                 return 'Sorry, filename %s was not found' % filename
 
+        rpc_segment = {
+            'msg': msg,
+            'results': {},
+            'filenames': {x: None for x in filenames}
+        }
+
         parent_token = msg['token']
-        rpc_segment = {'msg': msg_factory(msg.copy()),
-                       'results': {},
-                       'filenames': dict([(x, None) for x in filenames])}
 
         params = {}
         for filename in filenames:
-            msg = msg.copy()
-            msg['filename'] = filename
+            worker_msg = msg.copy()
+            worker_msg['parent_token'] = parent_token
+            worker_msg['filename'] = filename
             params['args'] = list(args)
             params['args'][0] = filename
             params['kwargs'] = kwargs
-            msg['params'] = params
+            worker_msg['params'] = params
 
             # Make up a new token for the message sent to the workers, and collect the responses using that id
-            msg['parent_token'] = parent_token
             new_token = binascii.hexlify(os.urandom(8)).decode()
-            msg['token'] = new_token
+            worker_msg['token'] = new_token
             rpc_segment['filenames'][filename] = new_token
-            self.worker_out_messages.setdefault(affinity, []).append(msg)
+            self.worker_out_messages.setdefault(affinity, []).append(worker_msg)
 
         self.rpc_segments[parent_token] = rpc_segment
 
