@@ -509,14 +509,18 @@ class ControllerNode(object):
 
         parent_token = msg['token']
 
-        params = {}
         for filename in filenames:
+            # make a new message
             worker_msg = msg.copy()
             worker_msg['parent_token'] = parent_token
             worker_msg['filename'] = filename
-            params['args'] = list(args)
+
+            # make parameters
+            params = {
+                'args': list(args),
+                'kwargs': kwargs
+            }
             params['args'][0] = filename
-            params['kwargs'] = kwargs
             worker_msg['params'] = params
 
             # Make up a new token for the message sent to the workers, and collect the responses using that id
