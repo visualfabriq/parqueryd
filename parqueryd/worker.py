@@ -26,7 +26,7 @@ from parquery.transport import serialize_pa_table
 import parqueryd.config
 from parqueryd.messages import msg_factory, WorkerRegisterMessage, ErrorMessage, BusyMessage, StopMessage, \
     DoneMessage, TicketDoneMessage
-from parqueryd.tool import rm_file_or_dir, ens_unicode
+from parqueryd.tool import rm_file_or_dir, ens_unicode, ens_bytes
 
 DATA_FILE_EXTENSION = '.parquet'
 # timeout in ms : how long to wait for network poll, this also affects frequency of seeing new controllers and datafiles
@@ -74,6 +74,7 @@ class WorkerBase(object):
         return _signal_handler
 
     def send(self, addr, msg):
+        addr = ens_bytes(addr)
         try:
             if 'data' in msg:
                 data = msg['data']
@@ -293,7 +294,7 @@ class WorkerNode(WorkerBase):
 
         # create message
         if len(pa_table) == 0:
-            msg['data'] = None
+            msg['data'] = ''
         else:
             msg['data'] = serialize_pa_table(pa_table)
 

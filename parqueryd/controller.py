@@ -166,7 +166,10 @@ class ControllerNode(object):
                         # If any of the segment workers return an error,
                         # Send the exception on to the calling RPC
                         msg['token'] = parent_token
-                        self.send(msg_id, msg.to_json(), is_rpc=True)
+                        try:
+                            self.send(msg_id, msg.to_json(), is_rpc=True)
+                        except TypeError:
+                            self.logger.debug('Bytes error with ' + str(msg))
                     # and continue the processing
                     continue
 
@@ -216,7 +219,10 @@ class ControllerNode(object):
                 self.send(msg_id, msg['data'], is_rpc=True)
                 gc.collect()
             else:
-                self.send(msg_id, msg.to_json(), is_rpc=True)
+                try:
+                    self.send(msg_id, msg.to_json(), is_rpc=True)
+                except TypeError:
+                    self.logger.debug('Bytes error with ' + str(msg))
             self.logger.debug('RPC Msg handled: %s' % msg.get('payload', '?'))
             self.logger.debug('Pending results: %s' % str(len(self.rpc_segments)))
 
@@ -265,7 +271,10 @@ class ControllerNode(object):
         # TODO Add a tracking of which requests have been sent out to the worker, and do retries with timeouts
         self.worker_map[worker_id]['last_sent'] = time.time()
         self.worker_map[worker_id]['busy'] = True
-        self.send(worker_id, msg.to_json())
+        try:
+            self.send(worker_id, msg.to_json())
+        except TypeError:
+            self.logger.debug('Bytes error with ' + str(msg))
 
     def handle_in(self):
         self.msg_count_in += 1
