@@ -132,6 +132,8 @@ class RPC(object):
     def uncompress_groupby_to_pq(self, result, groupby_col_list, agg_list, where_terms_list, aggregate=False):
         # uncompress result returned by the groupby and convert it to a Pandas DataFrame
         try:
+            if not result:
+                return None
             pa_table = deserialize_pa_table(result)
         except ArrowInvalid:
             # if it's not a pyarrow table, an error must have happened and we should have a string message
