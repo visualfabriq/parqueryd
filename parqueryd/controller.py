@@ -148,6 +148,8 @@ class ControllerNode(object):
     def process_sink_results(self):
         while self.rpc_results:
             msg = self.rpc_results.pop()
+            msg_id = binascii.unhexlify(msg.get('token'))
+
             # If this was a message to be combined, there should be a parent_token
             if 'parent_token' in msg:
                 parent_token = msg['parent_token']
@@ -164,7 +166,6 @@ class ControllerNode(object):
                         # If any of the segment workers return an error,
                         # Send the exception on to the calling RPC
                         msg['token'] = parent_token
-                        msg_id = binascii.unhexlify(parent_token)
                         self.send(msg_id, msg.to_json(), is_rpc=True)
                     # and continue the processing
                     continue
@@ -178,7 +179,8 @@ class ControllerNode(object):
                     result_table = None
 
                 original_rpc['results'][filename] = result_table
-                logging.debug('Received result for file ' + ens_unicode(filename) + ' (' +
+                logging.debug('Received result for token ' + ens_unicode(parent_token) +
+                              ' for file ' + ens_unicode(filename) + ' (' +
                               str(len(original_rpc['results'])) + '/' + str(len(original_rpc['filenames']))
                               + ')')
 
@@ -194,7 +196,8 @@ class ControllerNode(object):
                     pa_tables = [result_table for result_table in original_rpc['results'].values() if
                                  result_table is not None]
 
-                    logging.debug('Last result received and sending the combined result of ' +
+                    logging.debug('Last result received for token ' + ens_unicode(parent_token) +
+                                  ' and sending the combined result of ' +
                                   str(len(pa_tables)) + ' relevant results')
 
                     if len(pa_tables) == 0:
@@ -209,7 +212,6 @@ class ControllerNode(object):
                     # This was a segment result move on
                     continue
 
-            msg_id = binascii.unhexlify(msg.get('token'))
             if 'data' in msg:
                 self.send(msg_id, msg['data'], is_rpc=True)
                 gc.collect()
@@ -359,6 +361,7 @@ class ControllerNode(object):
         if 'token' in msg:
             # A message might have been passed on to a worker for processing and needs to be returned to
             #  the relevant caller so it goes in the rpc_results list
+            self.logger.debug('Received result for token %s' % ens_unicode(msg['token']))
             self.rpc_results.append(msg)
 
     def handle_rpc(self, sender, msg):

@@ -78,11 +78,13 @@ class WorkerBase(object):
             if 'data' in msg:
                 data = msg['data']
                 del msg['data']
+                self.logger.exception("Sending data message back to " + ens_unicode(addr))
                 self.socket.send_multipart([addr, msg.to_json(), data])
             else:
+                self.logger.exception("Sending non-data message back to " + ens_unicode(addr))
                 self.socket.send_multipart([addr, msg.to_json()])
         except zmq.ZMQError as ze:
-            self.logger.critical("Problem with %s: %s" % (str(addr), ze))
+            self.logger.critical("Problem with %s: %s" % (ens_unicode(addr), ze))
 
     def check_controllers(self):
         # Check the Redis set of controllers to see if any new ones have appeared,
@@ -149,15 +151,14 @@ class WorkerBase(object):
             self.logger.critical('Received a msg with len != 2, something seriously wrong. ')
             return
         sender, msg_buf = tmp
-        self.logger.info("Received message from sender %s", sender)
+        self.logger.info("Received message from sender %s", ens_unicode(sender))
         msg = msg_factory(msg_buf)
 
         data = self.controllers.get(sender)
         if not data:
-            self.logger.critical('Received a msg from %s - this is an unknown sender' % sender)
+            self.logger.critical('Received a msg from %s - this is an unknown sender' % ens_unicode(sender))
             return
         data['last_seen'] = time.time()
-        self.logger.debug('Received from %s', sender)
 
         # TODO Notify Controllers that we are busy, no more messages to be sent
         # The above busy notification is not perfect as other messages might be on their way already
@@ -172,7 +173,7 @@ class WorkerBase(object):
             tmp = ErrorMessage(msg)
             tmp['payload'] = traceback.format_exc()
             self.logger.exception("Unable to handle message [%s]", msg)
-        if tmp:
+        if tmp is not None:
             self.send(sender, tmp)
 
         self.send_to_all(DoneMessage())  # Send a DoneMessage to all controllers, this flags you as 'Done'. Duh
