@@ -152,7 +152,7 @@ class ControllerNode(object):
             if 'parent_token' in msg:
                 parent_token = msg['parent_token']
                 if parent_token not in self.rpc_segments:
-                    logging.debug('Orphaned msg segment %s probabably an error was raised elsewhere' % parent_token)
+                    logging.debug('Orphaned msg segment %s probably an error was raised elsewhere' % parent_token)
                     continue
                 original_rpc = self.rpc_segments.get(parent_token)
 
@@ -178,6 +178,9 @@ class ControllerNode(object):
                     result_table = None
 
                 original_rpc['results'][filename] = result_table
+                logging.debug('Received result for file ' + ens_unicode(filename) + ' (' +
+                              str(len(original_rpc['results'])) + '/' + str(len(original_rpc['filenames']))
+                              + ')')
 
                 if len(original_rpc['results']) == len(original_rpc['filenames']):
                     # Check to see that there are no filenames with no Result yet
@@ -190,7 +193,15 @@ class ControllerNode(object):
                     # if finished, aggregate the result to a combined arrow table
                     pa_tables = [result_table for result_table in original_rpc['results'].values() if
                                  result_table is not None]
-                    if pa_tables:
+
+                    logging.debug('Last result received and sending the combined result of ' +
+                                  str(len(pa_tables)) + ' relevant results')
+
+                    if len(pa_tables) == 0:
+                        msg['data'] = None
+                    elif len(pa_tables) == 1:
+                        msg['data'] = serialize_pa_table(pa_tables[0])
+                    else:
                         msg['data'] = serialize_pa_table(pa.concat_tables(pa_tables))
 
                     del self.rpc_segments[parent_token]
@@ -205,6 +216,7 @@ class ControllerNode(object):
             else:
                 self.send(msg_id, msg.to_json(), is_rpc=True)
             self.logger.debug('RPC Msg handled: %s' % msg.get('payload', '?'))
+            self.logger.debug('Pending results: %s' % str(len(self.rpc_segments)))
 
     def handle_out(self):
         # If there have been new affinity keys added, rotate them
