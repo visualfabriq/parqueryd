@@ -79,10 +79,10 @@ class WorkerBase(object):
             if 'data' in msg:
                 data = msg['data']
                 del msg['data']
-                self.logger.exception("Sending data message back to " + ens_unicode(addr))
+                self.logger.debug("Sending data message back to " + ens_unicode(addr))
                 self.socket.send_multipart([addr, msg.to_json(), data])
             else:
-                self.logger.exception("Sending non-data message back to " + ens_unicode(addr))
+                self.logger.debug("Sending non-data message back to " + ens_unicode(addr))
                 self.socket.send_multipart([addr, msg.to_json()])
         except zmq.ZMQError as ze:
             self.logger.critical("Problem with %s: %s" % (ens_unicode(addr), ze))

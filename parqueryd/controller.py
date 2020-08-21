@@ -504,6 +504,7 @@ class ControllerNode(object):
 
         params = {}
         for filename in filenames:
+            msg = msg.copy()
             msg['filename'] = filename
             params['args'] = list(args)
             params['args'][0] = filename
@@ -515,7 +516,7 @@ class ControllerNode(object):
             new_token = binascii.hexlify(os.urandom(8)).decode()
             msg['token'] = new_token
             rpc_segment['filenames'][filename] = new_token
-            self.worker_out_messages.setdefault(affinity, []).append(msg.copy())
+            self.worker_out_messages.setdefault(affinity, []).append(msg)
 
         self.rpc_segments[parent_token] = rpc_segment
 
