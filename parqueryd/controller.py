@@ -217,6 +217,8 @@ class ControllerNode(object):
 
             msg_id = binascii.unhexlify(msg.get('token'))
             if 'data' in msg:
+                if not msg['data']:
+                    msg['data'] = b''
                 self.send(msg_id, msg['data'], is_rpc=True)
                 gc.collect()
             else:
