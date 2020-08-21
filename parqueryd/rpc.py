@@ -108,7 +108,10 @@ class RPC(object):
                         self.logger.debug("Error, retrying %s" % (x + 1))
                         self.connect_socket()
                         pass
-            if not rep:
+            if name == 'groupby' and rep == '':
+                # this is the placeholder for an empty result from a groupby and needs to be explicitly caught
+                return None
+            elif not rep:
                 raise RPCError("No response from DQE, retries %s exceeded" % self.retries)
             try:
                 if name == 'groupby':
