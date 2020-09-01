@@ -1,3 +1,7 @@
+Release  0.1.32
+=======================
+- Upgrade Requirements
+
 Release  0.1.3-0.1.31
 =======================
 - Python 2/3 compatibility
