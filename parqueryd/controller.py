@@ -178,6 +178,9 @@ class ControllerNode(object):
 
                 if msg.get('data'):
                     result_table = deserialize_pa_table(msg['data'])
+                    # check if the result is valid
+                    if result_table.num_rows == 0:
+                        result_table = None
                 else:
                     result_table = None
 

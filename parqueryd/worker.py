@@ -293,7 +293,7 @@ class WorkerNode(WorkerBase):
         )
 
         # create message
-        if len(pa_table) == 0:
+        if pa_table.num_rows == 0:
             msg['data'] = b''
         else:
             msg['data'] = serialize_pa_table(pa_table)
