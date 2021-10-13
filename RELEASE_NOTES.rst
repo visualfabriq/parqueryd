@@ -1,6 +1,10 @@
+Release  0.1.35
+=======================
+- Update ParQuery dependencies
+
 Release  0.1.34
 =======================
-- Update ParQuery dependencu
+- Update ParQuery dependencies
 
 Release  0.1.33
 =======================
