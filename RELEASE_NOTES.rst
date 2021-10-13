@@ -1,3 +1,7 @@
+Release  0.1.34
+=======================
+- Update ParQuery dependencu
+
 Release  0.1.33
 =======================
 - Handle empty results better
