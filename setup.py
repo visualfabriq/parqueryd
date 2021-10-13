@@ -67,7 +67,7 @@ optional_libs = ['numexpr>=2.6.9']
 
 install_requires = [
     'parquery==0.2.3',
-    'pyzmq>=19.0.2',
+    'pyzmq==19.0.2',
     'redis>=3.5.3',
     'boto3~=1.17.45',
     'netifaces>=0.10.9',

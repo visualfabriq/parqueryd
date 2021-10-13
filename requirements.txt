@@ -1,6 +1,6 @@
 wheel
 parquery==0.2.3
-pyzmq>=19.0.2
+pyzmq==19.0.2
 redis>=3.5.3
 boto3>=1.14.40
 azure-storage-blob==12.3.2; python_version <= '2.7'
