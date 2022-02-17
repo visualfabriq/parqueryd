@@ -1,4 +1,4 @@
-Release  0.1.34-0.1.43
+Release  0.1.34-0.1.44
 =======================
 - Update ParQuery dependencies
 
