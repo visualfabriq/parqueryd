@@ -1,5 +1,5 @@
 wheel
-parquery==0.2.6
+parquery==0.2.8
 pyzmq==19.0.2
 redis>=3.5.3
 boto3>=1.14.40
