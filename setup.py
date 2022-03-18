@@ -42,13 +42,6 @@ def read(*parts):
         return f.read()
 
 
-def get_version():
-    version = {}
-    with open("parqueryd/version.py") as fp:
-        exec (fp.read(), version)
-    return version
-
-
 # Sources & libraries
 inc_dirs = [abspath('parqueryd')]
 try:
