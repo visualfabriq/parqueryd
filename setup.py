@@ -42,13 +42,6 @@ def read(*parts):
         return f.read()
 
 
-def get_version():
-    version = {}
-    with open("parqueryd/version.py") as fp:
-        exec (fp.read(), version)
-    return version
-
-
 # Sources & libraries
 inc_dirs = [abspath('parqueryd')]
 try:
@@ -115,7 +108,6 @@ classifiers = [
 
 setup(
     name="parqueryd",
-    version=get_version()['__version__'],
     description='A distribution framework for parquery',
     long_description=read("README.md"),
     long_description_content_type='text/markdown',
