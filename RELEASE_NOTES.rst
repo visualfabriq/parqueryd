@@ -1,3 +1,7 @@
+Release  0.1.45
+=======================
+- Ignore missing files instead of throwing an error
+
 Release  0.1.34-0.1.44
 =======================
 - Update ParQuery dependencies

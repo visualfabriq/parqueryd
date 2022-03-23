@@ -8,6 +8,7 @@ import time
 import traceback
 
 import pyarrow as pa
+import pandas as pd
 import redis
 import zmq
 from parquery.transport import deserialize_pa_table, serialize_pa_table
@@ -497,14 +498,11 @@ class ControllerNode(object):
             return 'Error, No correct args given, expecting: ' + \
                    'path_list, groupby_col_list, measure_col_list, where_terms_list'
 
-        filenames = args[0]
-        if not filenames:
-            return 'Error, no filenames given'
-
         # Make sure that all filenames are available before any messages are sent
-        for filename in filenames:
-            if filename and filename not in self.files_map:
-                return 'Sorry, filename %s was not found' % filename
+        filenames = args[0]
+        filenames = [filename for filename in filenames if filename and filename in self.files_map]
+        if not filenames:
+            return pa.Table.from_pandas(pd.DataFrame(), preserve_index=False)
 
         rpc_segment = {
             'msg': msg,
