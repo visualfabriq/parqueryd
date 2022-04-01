@@ -448,7 +448,7 @@ class ControllerNode(object):
             # if result is not None something happened, return to caller immediately
             result = self.handle_calc_message(msg)
 
-        if result:
+        if result is not None:
             msg['result'] = result
             self.rpc_results.append(msg)
 

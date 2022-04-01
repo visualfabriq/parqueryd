@@ -31,7 +31,7 @@ class RPCError(Exception):
 class RPC(object):
 
     def __init__(self, address=None, timeout=120, redis_url='redis://127.0.0.1:6379/0', loglevel=logging.INFO,
-                 retries=1):
+                 retries=2):
         self.logger = parqueryd.logger.getChild('rpc')
         self.logger.setLevel(loglevel)
         self.context = zmq.Context()
