@@ -78,15 +78,18 @@ class RPC(object):
     def __getattr__(self, name):
 
         def _parse_exception(e):
-            if e['strerror']:
-                if "Resource temporarily unavailable" in e['strerror']:
-                    return ResourceTemporarilyUnavailableError()
+            if type(e) == zmq.Again:
+                return ResourceTemporarilyUnavailableError()
+
+            if type(e) == zmq.ZMQErrorand:
                 if "Operation cannot be accomplished in current state" in e['strerror']:
                     return StateError()
                 if "UnableToConnect" in e['strerror']:
                     return UnableToConnect()
                 
                 return RPCError(e['strerror'])
+
+            return e
 
 
         def _rpc(*args, **kwargs):
@@ -121,7 +124,7 @@ class RPC(object):
             if name == 'groupby' and rep == '':
                 # this is the placeholder for an empty result from a groupby and needs to be explicitly caught
                 return None
-            elif not rep and last_except:
+            elif not rep and last_except:                    
                     parsed_exception = _parse_exception(last_except)
                     if parsed_exception:
                         self.logger.critical("No response from DQE, retries %s exceeded" % self.retries)

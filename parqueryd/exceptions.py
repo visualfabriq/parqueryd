@@ -1,4 +1,4 @@
-# TODO: move to utils?
+# TODO: move to utils maybe?
 WORKER_MAX_MEMORY_KB = 2 * (2 ** 20)  # Max memory of 2GB, in Kilobytes
 
 class RPCError(Exception):
@@ -28,7 +28,7 @@ class UnableToConnect(RPCError):
 
 
 class MissingDimensionError(RPCError):
-    _message = "RPCError: Given dimension: {} not found."
+    _message = "RPCError: Given dimension {} not found."
 
     def __init__(self, dimension_id):
         super(RPCError, self).__init__(dimension_id)
