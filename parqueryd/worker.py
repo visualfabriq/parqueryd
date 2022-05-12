@@ -300,7 +300,8 @@ class WorkerNode(WorkerBase):
                 msg['data'] = b''
             else:
                 msg['data'] = serialize_pa_table(pa_table)
-        except Exception as e:            
+        except Exception as e:
+            # TODO: parse to proper exception type            
             raise RPCError(e)
 
         return msg
