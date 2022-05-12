@@ -24,7 +24,7 @@ from parquery.aggregate import aggregate_pq
 from parquery.transport import serialize_pa_table
 
 import parqueryd.config
-from parqueryd.exceptions import WORKER_MAX_MEMORY_KB
+from parqueryd.exceptions import WORKER_MAX_MEMORY_KB, FileTooBigError, MissingDimensionError, RPCError
 from parqueryd.messages import msg_factory, WorkerRegisterMessage, ErrorMessage, BusyMessage, StopMessage, \
     DoneMessage, TicketDoneMessage
 from parqueryd.tool import rm_file_or_dir, ens_unicode, ens_bytes
@@ -234,12 +234,13 @@ class WorkerBase(object):
         # RSS is in bytes, convert to Kilobytes
         rss_kb = psutil.Process().memory_full_info().rss / (2 ** 10)
         self.logger.debug("RSS is: %s KB", rss_kb)
-        if self.restart_check and rss_kb > WORKER_MAX_MEMORY_KB:
+        if self.restart_check and rss_kb > WORKER_MAX_MEMORY_KB:        
             args = msg.get_args_kwargs()[0]
             self.logger.critical('args are: %s', args)
             self.logger.critical(
                 'Memory usage (KB) %s > %s, restarting', rss_kb, WORKER_MAX_MEMORY_KB)
-            self.running = False
+            self.running = False  
+            raise FileTooBigError()          
 
     def handle_work(self, msg):
         raise NotImplementedError
@@ -284,20 +285,23 @@ class WorkerNode(WorkerBase):
 
         # create rootdir
         full_file_name = os.path.join(self.data_dir, filename)
-        pa_table = aggregate_pq(
-            full_file_name,
-            groupby_col_list,
-            aggregation_list,
-            data_filter=where_terms_list,
-            aggregate=aggregate,
-            as_df=False
-        )
+        try:
+            pa_table = aggregate_pq(
+                full_file_name,
+                groupby_col_list,
+                aggregation_list,
+                data_filter=where_terms_list,
+                aggregate=aggregate,
+                as_df=False
+            )
 
-        # create message
-        if pa_table.num_rows == 0:
-            msg['data'] = b''
-        else:
-            msg['data'] = serialize_pa_table(pa_table)
+            # create message
+            if pa_table.num_rows == 0:
+                msg['data'] = b''
+            else:
+                msg['data'] = serialize_pa_table(pa_table)
+        except Exception as e:            
+            raise RPCError(e)
 
         return msg
 

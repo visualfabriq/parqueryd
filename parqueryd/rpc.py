@@ -107,16 +107,16 @@ class RPC(object):
             rep = None
             last_except = None
             for x in range(self.retries):
-                try:                    
+                try:
                     self.controller.send_json(msg)
                     rep = self.controller.recv()
                     break
-                except Exception as e:            
+                except Exception as e:
                     last_except = e
                     self.controller.close()
-                    self.logger.critical(e)                    
+                    self.logger.critical(e)
                     if x == self.retries:
-                        raise e                        
+                        raise e
                     else:
                         self.logger.debug("Error, retrying %s" % (x + 1))
                         self.connect_socket()
@@ -124,7 +124,7 @@ class RPC(object):
             if name == 'groupby' and rep == '':
                 # this is the placeholder for an empty result from a groupby and needs to be explicitly caught
                 return None
-            elif not rep and last_except:                    
+            elif not rep and last_except:
                     parsed_exception = _parse_exception(last_except)
                     if parsed_exception:
                         self.logger.critical("No response from DQE, retries %s exceeded" % self.retries)
