@@ -34,7 +34,6 @@ DATA_FILE_EXTENSION = '.parquet'
 POLLING_TIMEOUT = 5000
 # how often in seconds to send a WorkerRegisterMessage
 WRM_DELAY = 20
-# MAX_MEMORY_KB = 2 * (2 ** 20)  # Max memory of 2GB, in Kilobytes
 DOWNLOAD_DELAY = 5  # how often in seconds to check for downloads
 
 
@@ -234,7 +233,7 @@ class WorkerBase(object):
         # RSS is in bytes, convert to Kilobytes
         rss_kb = psutil.Process().memory_full_info().rss / (2 ** 10)
         self.logger.debug("RSS is: %s KB", rss_kb)
-        if self.restart_check and rss_kb > WORKER_MAX_MEMORY_KB:        
+        if self.restart_check and rss_kb > WORKER_MAX_MEMORY_KB:
             args = msg.get_args_kwargs()[0]
             self.logger.critical('args are: %s', args)
             self.logger.critical(

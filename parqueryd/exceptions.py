@@ -37,3 +37,14 @@ class MissingDimensionError(RPCError):
     def __str__(self):
         m = self._message
         return m.format(self.dimension_id)        
+
+class RetriesExceededError(RPCError):    
+    _message = "No response from DQE, retries {} exceeded"
+
+    def __init__(self, max_retries):
+        super(RPCError, self).__init__(max_retries)
+        self.max_retries = max_retries
+        
+    def __str__(self):
+        m = self._message
+        return m.format(self.max_retries)

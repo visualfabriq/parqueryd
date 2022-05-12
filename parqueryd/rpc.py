@@ -14,7 +14,7 @@ from parquery.transport import deserialize_pa_table
 from pyarrow import ArrowInvalid
 
 import parqueryd.config
-from parqueryd.exceptions import RPCError, ResourceTemporarilyUnavailableError, StateError, UnableToConnect
+from parqueryd.exceptions import RPCError, ResourceTemporarilyUnavailableError, RetriesExceededError, StateError, UnableToConnect
 from parqueryd.messages import msg_factory, RPCMessage, ErrorMessage
 from parqueryd.tool import ens_bytes
 
@@ -130,9 +130,9 @@ class RPC(object):
                         self.logger.critical("No response from DQE, retries %s exceeded" % self.retries)
                         raise parsed_exception  
                     else: 
-                        raise RPCError("No response from DQE, retries %s exceeded" % self.retries)
+                        raise RetriesExceededError(self.retries)
             elif not rep:
-                raise RPCError("No response from DQE, retries %s exceeded" % self.retries)
+                raise RetriesExceededError(self.retries)
 
             try:
                 if name == 'groupby':
