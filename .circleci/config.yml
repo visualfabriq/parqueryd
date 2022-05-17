@@ -15,16 +15,6 @@ jobs:
     docker:
       - image: cimg/python:<< parameters.runtime >>
 
-      - image: cimg/redis:6.2
-        name: redis
-
-      - image: localstack/localstack
-        name: localstack
-        environment:
-          - SERVICES=s3
-          - HOSTNAME=localstack
-          - DEFAULT_REGION=eu-west-1
-
     working_directory: << pipeline.parameters.workingdir >>
     steps:
       - checkout:

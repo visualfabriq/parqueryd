@@ -10,6 +10,7 @@ from uuid import uuid4
 import glob
 
 import boto3
+from moto import mock_s3
 import numpy as np
 import pandas as pd
 import pytest
@@ -23,6 +24,7 @@ from parqueryd.worker import DownloaderNode
 TEST_REDIS = 'redis://redis:6379/0'
 FAKE_ACCESS_KEY = 'fake access key'
 FAKE_SECRET_KEY = 'fake secret key'
+AWS_REGION = 'eu-west-1'
 
 
 class LocalS3Downloader(DownloaderNode):
@@ -31,12 +33,11 @@ class LocalS3Downloader(DownloaderNode):
     def __init__(self, *args, **kwargs):
         super(LocalS3Downloader, self).__init__(*args, **kwargs)
 
-        session = boto3.session.Session(
+        self._conn = boto3.resource(
+            "s3",
+            region_name=AWS_REGION,
             aws_access_key_id=FAKE_ACCESS_KEY,
-            aws_secret_access_key=FAKE_SECRET_KEY,
-            region_name='eu-west-1')
-
-        self._conn = session.resource('s3', endpoint_url='http://localstack:4572')
+            aws_secret_access_key=FAKE_SECRET_KEY)
 
     def _get_s3_conn(self):
         return FAKE_ACCESS_KEY, FAKE_SECRET_KEY, self._conn
@@ -69,22 +70,24 @@ def clear_incoming():
 
 @pytest.fixture
 def downloader():
-    downloader = LocalS3Downloader(redis_url=TEST_REDIS, loglevel=logging.DEBUG)
-    downloader_thread = threading.Thread(target=downloader.go)
-    downloader_thread.daemon = True
-    downloader_thread.start()
-    # Sleep 5 seconds, just to make sure all connections are properly established
-    sleep(5)
+    with mock_s3():
+        downloader = LocalS3Downloader(redis_url=TEST_REDIS, loglevel=logging.DEBUG)
+        downloader_thread = threading.Thread(target=downloader.go)
+        downloader_thread.daemon = True
+        downloader_thread.start()
+        # Sleep 5 seconds, just to make sure all connections are properly established
+        sleep(5)
 
-    yield downloader
+        yield downloader
 
-    # shutdown the downloader
-    downloader.running = False
+        # shutdown the downloader
+        downloader.running = False
 
 
 @contextmanager
 def clean_bucket(s3_conn, bucket_name):
-    bucket = s3_conn.create_bucket(Bucket=bucket_name)
+    location = {'LocationConstraint': AWS_REGION}
+    bucket = s3_conn.create_bucket(Bucket=bucket_name, CreateBucketConfiguration=location)
     for item in bucket.objects.all():
         item.delete()
 
