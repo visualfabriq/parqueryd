@@ -6,8 +6,8 @@ RUN apt-get update -y && apt-get upgrade -y
 RUN mkdir -p /srv/ && mkdir -p /srv/datasets && mkdir -p /srv/src/ && mkdir -p /srv/parquet/ && mkdir -p /srv/parquet/incoming && chmod -R 777 /srv/ 
 RUN apt-get install -y wget
 
-# CSV file not available online anymore. Copying it from parqueryd_getting_started folder
-ADD parqueryd_getting_started/yellow_tripdata_2016-01.csv /srv/datasets/yellow_tripdata_2016-01.csv
+# CSV file not available online anymore. Add to the repository folder
+ADD yellow_tripdata_2016-01.csv /srv/datasets/yellow_tripdata_2016-01.csv
 
 COPY misc/parqueryd.cfg /etc/parqueryd.cfg
 
