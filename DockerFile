@@ -7,7 +7,7 @@ RUN mkdir -p /srv/ && mkdir -p /srv/datasets && mkdir -p /srv/src/ && mkdir -p /
 RUN apt-get install -y wget
 
 # CSV file not available online anymore. Add to the repository folder
-ADD yellow_tripdata_2016-01.csv /srv/datasets/yellow_tripdata_2016-01.csv
+ADD test_data/yellow_tripdata_2016-01.csv /srv/datasets/yellow_tripdata_2016-01.csv
 
 COPY misc/parqueryd.cfg /etc/parqueryd.cfg
 
