@@ -302,7 +302,6 @@ class ControllerNode(object):
         if sender in self.others:
             self.handle_peer(sender, msg)
         else:
-            # Not certain on this (?¿)
             try:
                 self.handle_worker(sender, msg)
             except Exception as e:
