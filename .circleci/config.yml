@@ -1,13 +1,34 @@
-version: 2
-jobs:
-  build27:
-    docker:
-      - image: circleci/python:2.7
+version: 2.1
 
-    working_directory: ~/parqueryd/
+parameters:
+  workingdir:
+    type: string
+    default: "~/parqueryd/"
+
+jobs:
+  test:
+    parameters:
+      runtime:
+        description: Python runtime
+        type: string
+
+    docker:
+      - image: cimg/python:<< parameters.runtime >>
+
+      - image: cimg/redis:6.2
+        name: redis
+
+      - image: localstack/localstack
+        name: localstack
+        environment:
+          - SERVICES=s3
+          - HOSTNAME=localstack
+          - DEFAULT_REGION=eu-west-1
+
+    working_directory: << pipeline.parameters.workingdir >>
     steps:
       - checkout:
-          path: ~/parqueryd
+          path: << pipeline.parameters.workingdir >>
       - setup_remote_docker:
           docker_layer_caching: true
       - run:
@@ -29,10 +50,6 @@ jobs:
           name: check running docker
           command: |
             docker ps
-#      - run:
-#          name: Copy Test Results
-#          command: |
-#            docker cp $(docker ps -q --filter name=parqueryd_parqueryd_1):/srv/src/parqueryd/test-results ./test-results
       - run:
           name: Stop Services
           command: docker-compose down
@@ -42,75 +59,23 @@ jobs:
           path: test-results
           destination: tr1
 
-#  build3:
-#    docker:
-#      - image: circleci/python:3.7.1
-#
-#    working_directory: ~/parqueryd/
-#    steps:
-#      - checkout:
-#          path: ~/parqueryd
-#      - setup_remote_docker:
-#          docker_layer_caching: true
-#      - run:
-#          name: Check docker-compose version
-#          command: |
-#            docker -v
-#            docker-compose -v
-#      - run:
-#          name: Start Services
-#          command: |
-#            docker-compose -f docker-compose.yml up --build -d
-#      - run:
-#          name: Sleep 30 seconds waiting for localstack service building
-#          command: sleep 30
-#      - run:
-#          name: Run Tests
-#          command: docker-compose -f docker-compose.yml run parqueryd pytest -v --junitxml=test-results/pytest/pytest-report.xml
-#      - run:
-#          name: check running docker
-#          command: |
-#            docker ps
-##      - run:
-##          name: Copy Test Results
-##          command: |
-##            docker cp $(docker ps -q --filter name=parqueryd_parqueryd_1):/srv/src/parqueryd/test-results ./test-results
-#      - run:
-#          name: Stop Services
-#          command: docker-compose down
-#      - store_test_results:
-#          path: test-results
-#      - store_artifacts:
-#          path: test-results
-#          destination: tr1
-
-#      - run:
-#          name: Install Twine
-#          command: sudo pip install twine
-#      - run:
-#          name: Package Project
-#          command: sudo python setup.py sdist bdist_wheel
-#      - run:
-#          name: Upload to Pypi
-#          command: sudo twine upload -u ${PYPI_USERNAME} -p ${PYPI_PASSWORD} dist/*
 
 workflows:
-  version: 2
+  version: 2.1
   build-and-release:
     jobs:
-      - build27:
-          filters:
-            tags:
-              only: /[0-9]+(\.[0-9]+)*/
-#      - build3:
-#          filters:
-#            tags:
-#              only: /[0-9]+(\.[0-9]+)*/
+      - test:
+          name: py2
+          runtime: "2.7"
+
+      - test:
+          name: py3
+          runtime: "3.7"
+
 #      - pypi_release:
 #          requires:
-#            - build
+#            - py2
+#            - py3
 #          filters:
 #            tags:
 #              only: /[0-9]+(\.[0-9]+)*/
-#            branches:
-#              ignore: /.*/
