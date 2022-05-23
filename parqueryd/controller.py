@@ -15,6 +15,7 @@ from parquery.transport import deserialize_pa_table, serialize_pa_table
 
 import parqueryd
 import parqueryd.config
+from parqueryd.exceptions import RPCError
 from parqueryd.messages import msg_factory, Message, WorkerRegisterMessage, ErrorMessage, \
     BusyMessage, DoneMessage, StopMessage, TicketDoneMessage
 from parqueryd.tool import ens_bytes, ens_unicode
@@ -301,7 +302,11 @@ class ControllerNode(object):
         if sender in self.others:
             self.handle_peer(sender, msg)
         else:
-            self.handle_worker(sender, msg)
+            try:
+                self.handle_worker(sender, msg)
+            except Exception as e:
+                raise RPCError(e)
+
 
     def handle_peer(self, sender, msg):
         if msg.isa('loglevel'):
@@ -599,6 +604,10 @@ class ControllerNode(object):
             except KeyboardInterrupt:
                 self.logger.debug('Keyboard Interrupt')
                 self.kill()
+            except RPCError as e:
+                self.logger.error(e)
+                # raise in controller would be bad (?)
+                # raise e 
             except:
                 self.logger.error("Exception %s" % traceback.format_exc())
 

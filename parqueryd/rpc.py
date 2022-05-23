@@ -14,6 +14,7 @@ from parquery.transport import deserialize_pa_table
 from pyarrow import ArrowInvalid
 
 import parqueryd.config
+from parqueryd.exceptions import RPCError, ResourceTemporarilyUnavailableError, RetriesExceededError, StateError, UnableToConnect
 from parqueryd.messages import msg_factory, RPCMessage, ErrorMessage
 from parqueryd.tool import ens_bytes
 
@@ -21,11 +22,6 @@ try:
     from cStringIO import StringIO
 except ImportError:
     from io import StringIO
-
-
-class RPCError(Exception):
-    """Base class for exceptions in this module."""
-    pass
 
 
 class RPC(object):
@@ -81,6 +77,21 @@ class RPC(object):
 
     def __getattr__(self, name):
 
+        def _parse_exception(e):
+            if type(e) == zmq.Again:
+                return ResourceTemporarilyUnavailableError()
+
+            if type(e) == zmq.ZMQErrorand:
+                if "Operation cannot be accomplished in current state" in e['strerror']:
+                    return StateError()
+                if "UnableToConnect" in e['strerror']:
+                    return UnableToConnect()
+                
+                return RPCError(e['strerror'])
+
+            return e
+
+
         def _rpc(*args, **kwargs):
             self.logger.debug('Call %s on %s' % (name, self.address))
             start_time = time.time()
@@ -94,12 +105,14 @@ class RPC(object):
             msg = RPCMessage({'payload': name})
             msg['params'] = params
             rep = None
+            last_except = None
             for x in range(self.retries):
                 try:
                     self.controller.send_json(msg)
                     rep = self.controller.recv()
                     break
                 except Exception as e:
+                    last_except = e
                     self.controller.close()
                     self.logger.critical(e)
                     if x == self.retries:
@@ -111,8 +124,16 @@ class RPC(object):
             if name == 'groupby' and rep == '':
                 # this is the placeholder for an empty result from a groupby and needs to be explicitly caught
                 return None
+            elif not rep and last_except:
+                    parsed_exception = _parse_exception(last_except)
+                    if parsed_exception:
+                        self.logger.critical("No response from DQE, retries %s exceeded" % self.retries)
+                        raise parsed_exception  
+                    else: 
+                        raise RetriesExceededError(self.retries)
             elif not rep:
-                raise RPCError("No response from DQE, retries %s exceeded" % self.retries)
+                raise RetriesExceededError(self.retries)
+
             try:
                 if name == 'groupby':
                     _, groupby_col_list, agg_list, where_terms_list = args[0], args[1], args[2], args[3]

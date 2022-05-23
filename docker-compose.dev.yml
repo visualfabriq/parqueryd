@@ -1,5 +1,19 @@
 version: "3.4"
 services:
+  redis:
+    image: redis
+    networks:
+      default:
+        aliases:
+          - redis
+
   parqueryd:
+    image: parqueryd
+    build:
+      network: host
+      context: .
+      dockerfile: DockerFile
     volumes:
       - .:/srv/src/parqueryd
+    depends_on:
+      - redis

@@ -82,6 +82,7 @@ tests_requires = [
     'pytest>=4.6.11',
     'pytest-cov>=2.10.0',
     'codacy-coverage>=1.3.11',
+    "moto==2.1.0" if v.major == 2 else "moto"
 ]
 extras_requires = []
 ext_modules = []

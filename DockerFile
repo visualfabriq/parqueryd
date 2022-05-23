@@ -3,8 +3,11 @@ FROM python:2.7
 ENV SHELL=/bin/bash
 RUN apt-get update -y && apt-get upgrade -y
 
-RUN mkdir -p /srv/ && chmod -R 777 /srv/ && mkdir -p /srv/datasets && mkdir -p /srv/src/ && mkdir -p /srv/parquet/ && mkdir -p /srv/parquet/incoming
-RUN wget -q https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2016-01.csv -O /srv/datasets/yellow_tripdata_2016-01.csv
+RUN mkdir -p /srv/ && mkdir -p /srv/datasets && mkdir -p /srv/src/ && mkdir -p /srv/parquet/ && mkdir -p /srv/parquet/incoming && chmod -R 777 /srv/ 
+RUN apt-get install -y wget
+
+# CSV file not available online anymore. Add to the repository folder
+ADD test_data/yellow_tripdata_2016-01.csv /srv/datasets/yellow_tripdata_2016-01.csv
 
 COPY misc/parqueryd.cfg /etc/parqueryd.cfg
 
