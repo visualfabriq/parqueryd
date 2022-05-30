@@ -1,11 +1,17 @@
 version: 2.1
 orbs:
+  aws-cli: circleci/aws-cli@3.1
   codeartifact: visualfabriq/codeartifact@1.0.0
 
 parameters:
   workingdir:
     type: string
     default: "~/parqueryd/"
+
+executors:
+  vf-dqe-executor:
+    docker:
+      - image: cimg/base:current
 
 jobs:
   test:
@@ -56,6 +62,41 @@ jobs:
           path: test-results
           destination: tr1
 
+  build-and-push:
+    executor: codeartifact/default
+    steps:
+      - checkout
+      - codeartifact/init:
+          tool: pip
+      - run:
+          name: Build
+          command: |
+            pip install build
+            python -m build
+      - codeartifact/push:
+          tool: twine
+
+  deploy-dqe:
+    executor: vf-dqe-executor
+    parameters:
+      region:
+        type: string
+      service_name:
+        type: string
+    environment:
+      AWS_REGION: <<parameters.region>>
+      DOCUMENT_NAME: Deploy-dqe
+      SERVICE_NAME: <<parameters.service_name>>
+    steps:
+      - checkout
+      - aws-cli/setup:
+          profile-name: default
+      - run:
+          name: Deploy WEB Backend and Frontend
+          command: |
+            stty rows 64 cols 306
+            ./deployment/deploy.sh
+
 
 workflows:
   version: 2.1
@@ -71,10 +112,65 @@ workflows:
           name: py3
           runtime: "3.7"
 
-#      - pypi_release:
-#          requires:
-#            - py2
-#            - py3
-#          filters:
-#            tags:
-#              only: /[0-9]+(\.[0-9]+)*/
+      - build-and-push:
+          context: codeartifact-dev
+          requires:
+            - py2
+            - py3
+          filters:
+            branches:
+              only:
+                - master
+                - main
+
+      - approve:
+          name: Approve Deploy to Europe
+          type: approval
+          requires:
+            - build-and-push
+      - deploy-dqe:
+          name: Deploy to Europe
+          context: vf-deploy-dqe-prod
+          requires:
+            - Approve Deploy to Europe
+          region: eu-west-1
+          service_name: DQE
+
+      - approve:
+          name: Approve Deploy to USA
+          type: approval
+          requires:
+            - build-and-push
+      - deploy-dqe:
+          name: Deploy to USA
+          context: vf-deploy-dqe-prod
+          requires:
+            - Approve Deploy to USA
+          region: us-east-1
+          service_name: DQE
+
+      - approve:
+          name: Approve Deploy to South America
+          type: approval
+          requires:
+            - build-and-push
+      - deploy-dqe:
+          name: Deploy to South America
+          context: vf-deploy-dqe-prod
+          requires:
+            - Approve Deploy to South America
+          region: sa-east-1
+          service_name: DQE
+
+      - approve:
+          name: Approve Deploy to Asia
+          type: approval
+          requires:
+            - build-and-push
+      - deploy-dqe:
+          name: Deploy to Asia
+          context: vf-deploy-dqe-prod
+          requires:
+            - Approve Deploy to Asia
+          region: ap-northeast-1
+          service_name: DQE
