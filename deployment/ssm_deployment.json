@@ -42,7 +42,17 @@
             "source /srv/python/venv/bin/activate",
             "aws codeartifact login --tool pip --repository private --domain visualfabriq --domain-owner 103613169272 --region eu-west-1",
             "pip install -U parqueryd",
-            "pip config unset global.index-url"
+            "pip config unset global.index-url",
+            "systemctl enable parqueryd.controller",
+            "systemctl enable parqueryd.moveparquery",
+            "systemctl enable parqueryd.downloader@1",
+            "systemctl enable parqueryd.worker@1",
+            "systemctl enable parqueryd.worker@2",
+            "systemctl restart parqueryd.controller",
+            "systemctl restart parqueryd.moveparquery",
+            "systemctl restart parqueryd.downloader@1",
+            "systemctl restart parqueryd.worker@1",
+            "systemctl restart parqueryd.worker@2"
           ]
         }
       }
