@@ -82,6 +82,7 @@ jobs:
       region:
         type: string
       service_name:
+        default: DQE
         type: string
     environment:
       AWS_REGION: <<parameters.region>>
@@ -134,7 +135,6 @@ workflows:
           requires:
             - Approve Deploy to Europe
           region: eu-west-1
-          service_name: DQE
 
       - approve:
           name: Approve Deploy to USA
@@ -147,7 +147,6 @@ workflows:
           requires:
             - Approve Deploy to USA
           region: us-east-1
-          service_name: DQE
 
       - approve:
           name: Approve Deploy to South America
@@ -160,7 +159,6 @@ workflows:
           requires:
             - Approve Deploy to South America
           region: sa-east-1
-          service_name: DQE
 
       - approve:
           name: Approve Deploy to Asia
@@ -173,4 +171,3 @@ workflows:
           requires:
             - Approve Deploy to Asia
           region: ap-northeast-1
-          service_name: DQE
