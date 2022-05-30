@@ -81,13 +81,10 @@ jobs:
     parameters:
       region:
         type: string
-      service_name:
-        default: DQE
-        type: string
     environment:
       AWS_REGION: <<parameters.region>>
       DOCUMENT_NAME: Deploy-dqe
-      SERVICE_NAME: <<parameters.service_name>>
+      SERVICE_NAME: DQE
     steps:
       - checkout
       - aws-cli/setup:
