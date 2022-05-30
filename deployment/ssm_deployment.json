@@ -1,0 +1,50 @@
+{
+    "schemaVersion": "2.2",
+    "description": "Updates VF DQE/Parqueryd server",
+    "parameters": {},
+    "mainSteps": [
+      {
+        "action": "aws:runShellScript",
+        "name": "InstallParqueryd",
+        "inputs": {
+          "timeoutSeconds": 7200,
+          "runCommand": [
+            "#!/usr/bin/env bash",
+            "SLACK_URL=https://hooks.slack.com/services/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",
+            "EC2_INSTANCE_ID=$(cat /var/lib/cloud/data/instance-id)",
+            "post_to_slack () {",
+            "local DT=$(date '+%s')",
+            "case \"$1\" in",
+            "ok)",
+            "local COLOR=\"#36a64f\"",
+            "local MESSAGE=\"Successful\"",
+            ";;",
+            "error)",
+            "local COLOR=\"#ff0000\"",
+            "local MESSAGE=\"Error\"",
+            ";;",
+            "started)",
+            "local COLOR=\"#7EC0EE\"",
+            "local MESSAGE=\"Started\"",
+            ";;",
+            "esac",
+            "local ATTACHMENTS=\"[{\\\"fallback\\\": \\\"Deployment status automated message\\\",",
+            "\\\"color\\\": \\\"${COLOR}\\\",",
+            "\\\"pretext\\\": \\\"DQE/Parqueryd Server Deploy\\\",",
+            "\\\"title\\\": \\\"DQE/Parqueryd (${EC2_INSTANCE_ID})\\\",",
+            "\\\"title_link\\\": \\\"https://app.visualfabriq.com/\\\",",
+            "\\\"fields\\\": [{\\\"title\\\": \\\"${MESSAGE}\\\"}],",
+            "\\\"footer\\\": \\\"Deployer\\\",",
+            "\\\"ts\\\": ${DT}}]\"",
+            "curl -X POST --data \"payload={\\\"username\\\": \\\"Deployer\\\", \\\"attachments\\\": ${ATTACHMENTS}}\" ${SLACK_URL}",
+            "}",
+            "post_to_slack started",
+            "source /srv/python/venv/bin/activate",
+            "aws codeartifact login --tool pip --repository private --domain visualfabriq --domain-owner 103613169272 --region eu-west-1",
+            "pip install -U parqueryd",
+            "pip config unset global.index-url"
+          ]
+        }
+      }
+    ]
+  }
