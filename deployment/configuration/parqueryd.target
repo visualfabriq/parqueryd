@@ -1,0 +1,5 @@
+[Unit]
+Description=Parqueryd Main Service
+
+[Install]
+WantedBy=multi-user.target
