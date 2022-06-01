@@ -11,6 +11,7 @@
           "runCommand": [
             "#!/usr/bin/env bash",
             "source /srv/python/venv/bin/activate",
+            "pip install awscli",
             "aws codeartifact login --tool pip --repository private --domain visualfabriq --domain-owner 103613169272 --region eu-west-1",
             "pip install -U parqueryd",
             "pip config unset global.index-url",
