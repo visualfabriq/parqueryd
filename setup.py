@@ -90,7 +90,15 @@ tests_requires = [
     'moto==2.1.0;python_version=="2.7"',
     'moto;python_version>="3.7"',
 ]
-extras_requires = []
+dev_requires = [
+    "ipython==5.8.0;python_version=='2.7'",
+    "ipython>=7.20;python_version>='3.7'"
+]
+extras_requires = {
+    'all': tests_requires + dev_requires,
+    'test': tests_requires,
+    'dev': dev_requires
+}
 ext_modules = []
 package_data = {}
 classifiers = [
@@ -119,8 +127,8 @@ setup(
     classifiers=classifiers,
     author='Carst Vaartjes',
     author_email='cvaartjes@visualfabriq.com',
-    maintainer='Carst Vaartjes',
-    maintainer_email='cvaartjes@visualfabriq.com',
+    maintainer='Jelle Verstraaten',
+    maintainer_email='jverstraaten@visualfabriq.com',
     url='https://github.com/visualfabriq/parqueryd',
     license='GPL2',
     platforms=['any'],
@@ -129,10 +137,7 @@ setup(
     install_requires=install_requires,
     setup_requires=setup_requires,
     tests_require=tests_requires,
-    extras_require=dict(
-        optional=extras_requires,
-        test=tests_requires
-    ),
+    extras_require=extras_requires,
     packages=find_packages(),
     package_data=package_data,
     include_package_data=True,
