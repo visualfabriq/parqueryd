@@ -160,7 +160,7 @@ class ControllerNode(object):
                 original_rpc = self.rpc_segments.get(parent_token)
 
                 if isinstance(msg, ErrorMessage):
-                    self.logger.debug('Error messsage %s' % msg.get('payload'))
+                    self.logger.debug('Error message %s' % msg.get('payload'))
                     # Delete this entire message segments, if it still exists
                     if parent_token in self.rpc_segments:
                         del self.rpc_segments[parent_token]
@@ -453,7 +453,7 @@ class ControllerNode(object):
             # if result is not None something happened, return to caller immediately
             result = self.handle_calc_message(msg)
 
-        if result:
+        if result is not None:
             msg['result'] = result
             self.rpc_results.append(msg)
 
@@ -507,7 +507,8 @@ class ControllerNode(object):
         filenames = args[0]
         filenames = [filename for filename in filenames if filename and filename in self.files_map]
         if not filenames:
-            return pa.Table.from_pandas(pd.DataFrame(), preserve_index=False)
+            # if we return an empty result
+            return ''
 
         rpc_segment = {
             'msg': msg,

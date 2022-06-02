@@ -12,7 +12,7 @@ Release  0.1.46
 - Updated dependencies
 - Updated CircleCI config for easier building nad deploying
 
-Release  0.1.45
+Release  0.1.45-0.1.48
 =======================
 - Ignore missing files instead of throwing an error
 
