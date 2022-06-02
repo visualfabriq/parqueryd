@@ -90,7 +90,7 @@ jobs:
       - aws-cli/setup:
           profile-name: default
       - run:
-          name: Deploy WEB Backend and Frontend
+          name: Deploy Parqueryd server
           command: |
             stty rows 64 cols 306
             ./deployment/deploy.sh
