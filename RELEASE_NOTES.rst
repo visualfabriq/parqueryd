@@ -1,3 +1,9 @@
+
+Release  0.1.49
+=======================
+- Fix version for msrest for python 2.7
+- Update parquery version to 0.3.1
+
 Release  0.1.45
 =======================
 - Ignore missing files instead of throwing an error
