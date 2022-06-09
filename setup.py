@@ -69,6 +69,7 @@ install_requires = [
 ]
 if v < (3,):
     install_requires.extend([
+    'msrest==0.6.10',
     'smart_open==1.10.1',
     'azure-storage-blob==12.3.2',
 ])
