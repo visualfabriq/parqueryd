@@ -1,7 +1,10 @@
+Release  0.1.50
+=======================
+- Pin version for msrest for python 2.7 at 0.6.21
 
 Release  0.1.49
 =======================
-- Fix version for msrest for python 2.7
+- Fix version for msrest for python 2.7 at 0.6.10
 - Update parquery version to 0.3.1
 
 Release  0.1.45
