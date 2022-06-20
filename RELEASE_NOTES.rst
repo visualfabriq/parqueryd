@@ -1,3 +1,7 @@
+Release  0.1.51
+=======================
+- Return empty result when we are missing dimensions in a filter instead of throwing an error
+
 Release  0.1.50
 =======================
 - Pin version for msrest for python 2.7 at 0.6.21
