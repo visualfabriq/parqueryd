@@ -5,9 +5,6 @@ class RPCError(Exception):
     """Base class for exceptions in this module."""
     _message = "RPCError: There was an exception when performing the RPC action"
 
-    def __init__(self):
-        super(RPCError, self).__init__()
-
     def __str__(self):
         return repr(self._message)    
 
