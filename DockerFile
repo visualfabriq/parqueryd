@@ -1,6 +1,9 @@
 FROM python:2.7
 
 ENV SHELL=/bin/bash
+
+ARG PIP_INDEX_URL
+
 RUN apt-get update -y && apt-get upgrade -y
 
 RUN mkdir -p /srv/ && mkdir -p /srv/datasets && mkdir -p /srv/src/ && mkdir -p /srv/parquet/ && mkdir -p /srv/parquet/incoming && chmod -R 777 /srv/ 
