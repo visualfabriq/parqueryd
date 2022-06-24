@@ -10,7 +10,7 @@ Release  0.1.49
 Release  0.1.46
 =======================
 - Updated dependencies
-- Updated CircleCI config for easier building nad deploying
+- Updated CircleCI config for easier building and deploying
 
 Release  0.1.45-0.1.48
 =======================
