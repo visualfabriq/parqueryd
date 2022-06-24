@@ -1,3 +1,10 @@
+Release  0.1.51
+=======================
+- Fixed issue with exception not accepting an argument
+- Fixed unittests
+- Updated CircleCI configuration
+- Implemented various installing/deployment scripts
+
 Release  0.1.50
 =======================
 - Pin version for msrest for python 2.7 at 0.6.21
@@ -7,7 +14,12 @@ Release  0.1.49
 - Fix version for msrest for python 2.7 at 0.6.10
 - Update parquery version to 0.3.1
 
-Release  0.1.45
+Release  0.1.46
+=======================
+- Updated dependencies
+- Updated CircleCI config for easier building and deploying
+
+Release  0.1.45-0.1.48
 =======================
 - Ignore missing files instead of throwing an error
 

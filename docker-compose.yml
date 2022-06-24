@@ -21,6 +21,8 @@ services:
     build:
       network: host
       context: .
+      args:
+        - PIP_INDEX_URL
       dockerfile: DockerFile
     depends_on:
       - redis

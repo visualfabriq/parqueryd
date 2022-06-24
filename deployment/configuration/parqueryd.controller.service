@@ -1,0 +1,18 @@
+[Unit]
+Description=Parqueryd Controller
+Documentation=https://github.com/visualfabriq/parqueryd
+PartOf=parqueryd.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/srv/tmp
+Environment=CRON_SERVER_NAME=proc 
+Environment=TMP=/srv/tmp TEMP=/srv/tmp 
+Environment=TMPFILE=/srv/tmp
+ExecStart=/srv/python/venv/bin/python /srv/python/venv/lib/python3.8/site-packages/parqueryd/node.py controller
+Restart=always
+RestartSec=30s
+
+[Install]
+WantedBy=parqueryd.target
