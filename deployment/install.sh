@@ -1,3 +1,4 @@
+#!/bin/bash
 apt update
 apt upgrade -y
 apt install python3-pip -y
@@ -13,7 +14,7 @@ pip install virtualenv
 source /srv/python/venv/bin/activate
 pip install parqueryd
 
-sudo echo "redis_url = redis://redis.gumm43.ng.0001.euw1.cache.amazonaws.com:6379/0" > /etc/parqueryd.cfg
+echo "redis_url = redis://redis.gumm43.ng.0001.euw1.cache.amazonaws.com:6379/0" | sudo tee /etc/parqueryd.cfg
 cd /etc/systemd/system/
 cp parqueryd.target /etc/systemd/system/
 cp parqueryd.controller.service /etc/systemd/system/

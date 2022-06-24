@@ -7,10 +7,10 @@ TAG_LIST="Key=Owner,Value=RGM Key=CostCenter,Value=RGM Key=ServiceName,Value=DQE
 
 for REGION in $REGIONS; do
 	echo $REGION
-	EXISTING_DOCUMENT=`aws ssm describe-document --region $REGION --name $DOCUMENT_NAME`
+	EXISTING_DOCUMENT=$(aws ssm describe-document --region "$REGION" --name "$DOCUMENT_NAME")
 	if [ -z "$EXISTING_DOCUMENT" ]; then
-		aws ssm create-document --region $REGION $COMMAND_TOGGLES --document-type Command --tags $TAG_LIST || true
+		aws ssm create-document --region "$REGION" $COMMAND_TOGGLES --document-type Command --tags "$TAG_LIST" || true
 	else
-		aws ssm update-document --region $REGION $COMMAND_TOGGLES --document-version \$LATEST || true
+		aws ssm update-document --region "$REGION" $COMMAND_TOGGLES --document-version \$LATEST || true
 	fi
 done
