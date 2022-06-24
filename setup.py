@@ -64,7 +64,7 @@ install_requires = [
     'boto3==1.17.95;python_version=="2.7"',
     'boto3>=1.17.95;python_version>="3.7"',
     'configobj>=5.0.6',
-    'msrest==0.6.21;python_version>="3.7"',
+    'msrest==0.6.21;python_version=="2.7"',
     'netifaces>=0.10.9',
     'numexpr==2.7.3;python_version=="2.7"',
     'numexpr>=2.7.3;python_version>="3.7"',
