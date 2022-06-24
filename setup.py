@@ -17,9 +17,9 @@ from setuptools.command.build_ext import build_ext as _build_ext
 
 
 # Check this Python version is supported
-if any([v < (2, 6), (3,) < v < (3, 5)]):
+if any([v < (2, 6), (3,) < v < (3, 7)]):
     raise Exception("Unsupported Python version %d.%d. Requires Python >= 2.7 "
-                    "or >= 3.5." % v[:2])
+                    "or >= 3.7." % v[:2])
 
 
 class build_ext(_build_ext):
@@ -59,53 +59,64 @@ cmdclass = {'build_ext': build_ext}
 optional_libs = ['numexpr>=2.6.9']
 
 install_requires = [
-    'parquery==0.3.1',
-    'pyzmq==19.0.2',
-    'redis>=3.5.3',
-    'boto3~=1.17.45',
-    'netifaces>=0.10.9',
+    'azure-storage-blob==12.3.2;python_version=="2.7"',
+    'azure-storage-blob>=12.4.0;python_version>="3.7"',
+    'boto3==1.17.95;python_version=="2.7"',
+    'boto3>=1.17.95;python_version>="3.7"',
     'configobj>=5.0.6',
+    'msrest==0.6.21;python_version=="2.7"',
+    'netifaces>=0.10.9',
+    'numexpr==2.7.3;python_version=="2.7"',
+    'numexpr>=2.7.3;python_version>="3.7"',
+    'numpy==1.16.6;python_version=="2.7"',
+    'numpy>=1.19.1;python_version>="3.7"',
+    'pyarrow==0.16.0;python_version=="2.7"',
+    'pyarrow>=1.0.0;python_version>="3.7"',
+    'pandas==0.24.2;python_version=="2.7"',
+    'pandas>=1.1;python_version>="3.7"',
+    'parquery==0.3.1',
     'psutil>=5.7.2',
+    'pyzmq==19.0.2',
+    'redis~=3.5;python_version=="2.7"',
+    'redis>=3.5;python_version>="3.7"',
+    'smart-open==1.10.1;python_version=="2.7"',
+    'smart-open>=1.11.1;python_version>="3.7"'
 ]
-if v < (3,):
-    install_requires.extend([
-    'msrest==0.6.21',
-    'smart_open==1.10.1',
-    'azure-storage-blob==12.3.2',
-])
-else:
-    install_requires.extend([
-    'smart_open>=1.11.1',
-    'azure-storage-blob>=12.4.0',
-])
 setup_requires = []
 tests_requires = [
     'pytest>=4.6.11',
     'pytest-cov>=2.10.0',
     'codacy-coverage>=1.3.11',
-    "moto==2.1.0" if v.major == 2 else "moto"
+    'moto==2.1.0;python_version=="2.7"',
+    'moto;python_version>="3.7"',
 ]
-extras_requires = []
+dev_requires = [
+    "ipython==5.8.0;python_version=='2.7'",
+    "ipython>=7.20;python_version>='3.7'"
+]
+extras_requires = {
+    'all': tests_requires + dev_requires,
+    'test': tests_requires,
+    'dev': dev_requires
+}
 ext_modules = []
 package_data = {}
 classifiers = [
-        'Development Status :: 4 - Beta',
-        'Intended Audience :: Developers',
-        'Intended Audience :: Information Technology',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: Unix',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
+    'Development Status :: 4 - Beta',
+    'Intended Audience :: Developers',
+    'Intended Audience :: Information Technology',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: BSD License',
+    'Programming Language :: Python',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'Operating System :: Microsoft :: Windows',
+    'Operating System :: Unix',
+    'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
 ]
 
 setup(
@@ -116,8 +127,8 @@ setup(
     classifiers=classifiers,
     author='Carst Vaartjes',
     author_email='cvaartjes@visualfabriq.com',
-    maintainer='Carst Vaartjes',
-    maintainer_email='cvaartjes@visualfabriq.com',
+    maintainer='Jelle Verstraaten',
+    maintainer_email='jverstraaten@visualfabriq.com',
     url='https://github.com/visualfabriq/parqueryd',
     license='GPL2',
     platforms=['any'],
@@ -126,10 +137,7 @@ setup(
     install_requires=install_requires,
     setup_requires=setup_requires,
     tests_require=tests_requires,
-    extras_require=dict(
-        optional=extras_requires,
-        test=tests_requires
-    ),
+    extras_require=extras_requires,
     packages=find_packages(),
     package_data=package_data,
     include_package_data=True,
