@@ -167,7 +167,7 @@ def compare_with_pandas(taxi_df, rpc, shards, group_col, agg_col, method):
 
     assert_frame_equal(full_result, pandas_result, check_less_precise=True)
 
-@pytest.mark.skipif(sys.version_info < (3, 0), "DQE is already running on python 3 so we don't care too much about python 2")
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="DQE is already running on python 3 so we don't care too much about python 2")
 def test_compare_full_with_shard(rpc, shards):
     shard_filenames = [os.path.basename(x) for x in shards]
 
