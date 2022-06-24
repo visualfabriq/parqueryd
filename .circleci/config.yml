@@ -123,6 +123,7 @@ workflows:
 
       - approve:
           name: Approve Deploy to Europe
+          context: vf-deploy-dqe-prod
           type: approval
           requires:
             - build-and-push
@@ -135,6 +136,7 @@ workflows:
 
       - approve:
           name: Approve Deploy to USA
+          context: vf-deploy-dqe-prod
           type: approval
           requires:
             - build-and-push
@@ -147,6 +149,7 @@ workflows:
 
       - approve:
           name: Approve Deploy to South America
+          context: vf-deploy-dqe-prod
           type: approval
           requires:
             - build-and-push
@@ -159,6 +162,7 @@ workflows:
 
       - approve:
           name: Approve Deploy to Asia
+          context: vf-deploy-dqe-prod
           type: approval
           requires:
             - build-and-push
