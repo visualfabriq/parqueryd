@@ -8,7 +8,6 @@ import time
 import traceback
 
 import pyarrow as pa
-import pandas as pd
 import redis
 import zmq
 from parquery.transport import deserialize_pa_table, serialize_pa_table
