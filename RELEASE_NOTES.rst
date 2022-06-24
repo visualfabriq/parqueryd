@@ -1,3 +1,10 @@
+Release  0.1.51
+=======================
+- Fixed issue with exception not accepting an argument
+- Fixed unittests
+- Updated CircleCI configuration
+- Implemented various installing/deployment scripts
+
 Release  0.1.50
 =======================
 - Pin version for msrest for python 2.7 at 0.6.21
