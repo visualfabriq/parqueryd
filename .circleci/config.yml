@@ -121,12 +121,35 @@ workflows:
                 - master
                 - main
 
+  deploy:
+    jobs:
+      - test:
+          context: codeartifact-dev
+          name: py2
+          runtime: "2.7"
+          filters:
+            branches:
+              only:
+                - master
+                - main
+
+      - test:
+          context: codeartifact-dev
+          name: py3
+          runtime: "3.7"
+          filters:
+            branches:
+              only:
+                - master
+                - main
+
       - approve:
           name: Approve Deploy to Europe
           context: vf-deploy-dqe-prod
           type: approval
           requires:
-            - build-and-push
+            - py2
+            - py3
       - deploy-dqe:
           name: Deploy to Europe
           context: vf-deploy-dqe-prod
@@ -139,7 +162,8 @@ workflows:
           context: vf-deploy-dqe-prod
           type: approval
           requires:
-            - build-and-push
+            - py2
+            - py3
       - deploy-dqe:
           name: Deploy to USA
           context: vf-deploy-dqe-prod
@@ -152,7 +176,8 @@ workflows:
           context: vf-deploy-dqe-prod
           type: approval
           requires:
-            - build-and-push
+            - py2
+            - py3
       - deploy-dqe:
           name: Deploy to South America
           context: vf-deploy-dqe-prod
@@ -165,7 +190,8 @@ workflows:
           context: vf-deploy-dqe-prod
           type: approval
           requires:
-            - build-and-push
+            - py2
+            - py3
       - deploy-dqe:
           name: Deploy to Asia
           context: vf-deploy-dqe-prod
