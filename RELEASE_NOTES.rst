@@ -1,3 +1,11 @@
+Release 0.1.52
+=======================
+- Fixed parquery dependency being pinned strictly to more usable pinning strategy
+- Updated deployment document to eagerly update dependencies so we pull newer versions
+- Updated CircleCI configuration to separate deployment from package building so it's easier to redeploy
+- Removed outdated requirements file
+- Removed outdated imports
+
 Release  0.1.51
 =======================
 - Fixed issue with exception not accepting an argument
