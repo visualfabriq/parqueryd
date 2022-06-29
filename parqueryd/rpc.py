@@ -1,9 +1,7 @@
-import base64
 import binascii
 import json
 import logging
 import os
-import pickle
 import random
 import time
 
@@ -17,11 +15,6 @@ import parqueryd.config
 from parqueryd.exceptions import RPCError, ResourceTemporarilyUnavailableError, RetriesExceededError, StateError, UnableToConnect
 from parqueryd.messages import msg_factory, RPCMessage, ErrorMessage
 from parqueryd.tool import ens_bytes
-
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import StringIO
 
 
 class RPC(object):
