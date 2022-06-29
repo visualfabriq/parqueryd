@@ -74,7 +74,7 @@ install_requires = [
     'pyarrow>=1.0.0;python_version>="3.7"',
     'pandas==0.24.2;python_version=="2.7"',
     'pandas>=1.1;python_version>="3.7"',
-    'parquery==0.3.1',
+    'parquery~=0.3, >=0.3.2',
     'psutil>=5.7.2',
     'pyzmq==19.0.2',
     'redis~=3.5;python_version=="2.7"',
