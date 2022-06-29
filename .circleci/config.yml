@@ -89,6 +89,8 @@ jobs:
       - checkout
       - aws-cli/setup:
           profile-name: default
+          role-arn: '${AWS_SSM_ROLE_ARN}'
+
       - run:
           name: Deploy Parqueryd server
           command: |
