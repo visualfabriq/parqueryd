@@ -1,3 +1,8 @@
+Release 0.1.53
+=======================
+- Fixed RPC logic expecting a string but receiving bytes
+- Fixed parqueryd data dir being hard-coded
+
 Release 0.1.52
 =======================
 - Fixed parquery dependency being pinned strictly to more usable pinning strategy
