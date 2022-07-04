@@ -103,6 +103,8 @@ class RPC(object):
                 try:
                     self.controller.send_json(msg)
                     rep = self.controller.recv()
+                    if isinstance(rep, bytes):
+                        rep = rep.decode('UTF-8')
                     break
                 except Exception as e:
                     last_except = e
