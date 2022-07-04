@@ -114,7 +114,7 @@ class RPC(object):
                         self.logger.debug("Error, retrying %s" % (x + 1))
                         self.connect_socket()
                         pass
-            if name == 'groupby' and rep == '':
+            if name == 'groupby' and rep in ['', b'']:
                 # this is the placeholder for an empty result from a groupby and needs to be explicitly caught
                 return None
             elif not rep and last_except:
