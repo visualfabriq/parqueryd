@@ -10,7 +10,7 @@ def msg_factory(msg):
         try:
             msg = json.loads(msg.decode())
         except:
-            msg is None
+            msg = None
     if not msg:
         return Message()
     msg_mapping = {'calc': CalcMessage, 'rpc': RPCMessage, 'error': ErrorMessage,
