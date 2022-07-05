@@ -1,3 +1,7 @@
+Release 0.1.54
+=======================
+- Fixed RPC logic bytes conversion in a different way
+
 Release 0.1.53
 =======================
 - Fixed RPC logic expecting a string but receiving bytes
