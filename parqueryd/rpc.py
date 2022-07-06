@@ -1,5 +1,4 @@
 import binascii
-import json
 import logging
 import os
 import random
@@ -103,8 +102,6 @@ class RPC(object):
                 try:
                     self.controller.send_json(msg)
                     rep = self.controller.recv()
-                    if isinstance(rep, bytes):
-                        rep = rep.decode('UTF-8')
                     break
                 except Exception as e:
                     last_except = e
@@ -116,9 +113,10 @@ class RPC(object):
                         self.logger.debug("Error, retrying %s" % (x + 1))
                         self.connect_socket()
                         pass
-            if name == 'groupby' and rep == '':
+            if name == 'groupby' and rep in ['', b'']:
                 # this is the placeholder for an empty result from a groupby and needs to be explicitly caught
                 return None
+
             elif not rep and last_except:
                     parsed_exception = _parse_exception(last_except)
                     if parsed_exception:
@@ -126,22 +124,28 @@ class RPC(object):
                         raise parsed_exception  
                     else: 
                         raise RetriesExceededError(self.retries)
+
             elif not rep:
                 raise RetriesExceededError(self.retries)
 
-            try:
-                if name == 'groupby':
-                    _, groupby_col_list, agg_list, where_terms_list = args[0], args[1], args[2], args[3]
+            resp_msg = msg_factory(rep)
+            if isinstance(resp_msg, ErrorMessage):
+                raise RPCError(resp_msg.get('payload'))
+
+            if name == 'groupby':
+                _, groupby_col_list, agg_list, where_terms_list = args[0], args[1], args[2], args[3]
+                try:
                     result = self.uncompress_groupby_to_pq(rep, groupby_col_list, agg_list, where_terms_list,
-                                                           aggregate=kwargs.get('aggregate', False))
-                else:
-                    rep = msg_factory(json.loads(rep))
-                    result = rep.get('result', {})
-            except (ValueError, TypeError):
-                self.logger.exception('Could not use RPC method: {}/{}'.format(name, rep))
-                result = rep
-            if isinstance(rep, ErrorMessage):
-                raise RPCError(rep.get('payload'))
+                                                            aggregate=kwargs.get('aggregate', False))
+                except ArrowInvalid:
+                    if isinstance(resp_msg, RPCMessage) and resp_msg['result'] == '':
+                        return None
+
+                    self.logger.exception('Could not use RPC method: {}/{}'.format(name, resp_msg))
+                    raise ValueError(result)
+            else:
+                result = resp_msg.get('result', {})
+
             stop_time = time.time()
             self.last_call_duration = stop_time - start_time
             return result
@@ -150,18 +154,9 @@ class RPC(object):
 
     def uncompress_groupby_to_pq(self, result, groupby_col_list, agg_list, where_terms_list, aggregate=False):
         # uncompress result returned by the groupby and convert it to a Pandas DataFrame
-        try:
-            if not result:
-                return None
-            pa_table = deserialize_pa_table(result)
-        except ArrowInvalid:
-            # if it's not a pyarrow table, an error must have happened and we should have a string message
-            try:
-                if isinstance(result, dict) and result.get('result'):
-                    result = result['result']
-                raise ValueError(result)
-            except:
-                raise
+        if not result:
+            return None
+        pa_table = deserialize_pa_table(result)
 
         result_df = aggregate_pa(
             pa_table,
