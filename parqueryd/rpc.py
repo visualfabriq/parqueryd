@@ -133,7 +133,8 @@ class RPC(object):
                 raise RPCError(resp_msg.get('payload'))
 
             if name == 'groupby':
-                _, groupby_col_list, agg_list, _ = args[0], args[1], args[2], args[3]
+                groupby_col_list = args[1]
+                agg_list = args[2]
                 aggregate = kwargs.get('aggregate', False)
                 try:
                     result = self.uncompress_groupby_to_pq(rep, groupby_col_list, agg_list, aggregate=aggregate)
