@@ -1,3 +1,8 @@
+Release 0.1.54
+=======================
+- Fixed RPC logic receiving binary pyarrow table handling
+- General refactoring to handle specific edge-cases
+
 Release 0.1.53
 =======================
 - Fixed RPC logic expecting a string but receiving bytes
