@@ -118,12 +118,12 @@ class RPC(object):
                 return None
 
             elif not rep and last_except:
-                    parsed_exception = _parse_exception(last_except)
-                    if parsed_exception:
-                        self.logger.critical("No response from DQE, retries %s exceeded" % self.retries)
-                        raise parsed_exception  
-                    else: 
-                        raise RetriesExceededError(self.retries)
+                parsed_exception = _parse_exception(last_except)
+                if parsed_exception:
+                    self.logger.critical("No response from DQE, retries %s exceeded" % self.retries)
+                    raise parsed_exception  
+                else: 
+                    raise RetriesExceededError(self.retries)
 
             elif not rep:
                 raise RetriesExceededError(self.retries)
