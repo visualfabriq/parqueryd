@@ -133,12 +133,13 @@ class RPC(object):
                 raise RPCError(resp_msg.get('payload'))
 
             if name == 'groupby':
-                _, groupby_col_list, agg_list, where_terms_list = args[0], args[1], args[2], args[3]
+                _, groupby_col_list, agg_list, _ = args[0], args[1], args[2], args[3]
+                aggregate = kwargs.get('aggregate', False)
                 try:
-                    result = self.uncompress_groupby_to_pq(rep, groupby_col_list, agg_list, where_terms_list,
-                                                            aggregate=kwargs.get('aggregate', False))
+                    result = self.uncompress_groupby_to_pq(rep, groupby_col_list, agg_list, aggregate=aggregate)
                 except ArrowInvalid:
                     if isinstance(resp_msg, RPCMessage) and resp_msg['result'] == '':
+                        # Specific edge-case, don't know where this is coming from. Maybe just an empty collection?
                         return None
 
                     self.logger.exception('Could not use RPC method: {}/{}'.format(name, resp_msg))
@@ -152,7 +153,7 @@ class RPC(object):
 
         return _rpc
 
-    def uncompress_groupby_to_pq(self, result, groupby_col_list, agg_list, where_terms_list, aggregate=False):
+    def uncompress_groupby_to_pq(self, result, groupby_col_list, agg_list, aggregate=False):
         # uncompress result returned by the groupby and convert it to a Pandas DataFrame
         if not result:
             return None
