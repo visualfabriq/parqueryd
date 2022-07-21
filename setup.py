@@ -79,6 +79,7 @@ install_requires = [
     'pyzmq==19.0.2',
     'redis~=3.5;python_version=="2.7"',
     'redis>=3.5;python_version>="3.7"',
+    "sentry-sdk",
     'smart-open==1.10.1;python_version=="2.7"',
     'smart-open>=1.11.1;python_version>="3.7"'
 ]
