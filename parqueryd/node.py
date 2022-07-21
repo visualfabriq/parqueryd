@@ -32,16 +32,17 @@ def main():
     else:
         loglevel = logging.ERROR
 
-    if parqueryd.config.SENTRY_DSN is not None:
-        sentry_sdk.init(
-            dsn=parqueryd.config.SENTRY_DSN,
-            traces_sample_rate=1.0,
-            environment='legacy-parqueryd-{}'.format(parqueryd.__version__)
-        )
-
     config = configobj.ConfigObj('/etc/parqueryd.cfg')
     redis_url = config.get('redis_url', 'redis://127.0.0.1:6379/0')
     azure_conn_string = config.get('azure_conn_string', None)
+    sentry_dsn = config.get('sentry_dsn', None)
+
+    if sentry_dsn is not None:
+        sentry_sdk.init(
+            dsn=sentry_dsn,
+            traces_sample_rate=1.0,
+            environment='legacy-parqueryd-{}'.format(parqueryd.__version__)
+        )
 
     if args.worker_type == 'controller':
         node = ControllerNode(redis_url=redis_url, loglevel=loglevel, azure_conn_string=azure_conn_string)
