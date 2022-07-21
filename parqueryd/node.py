@@ -6,6 +6,7 @@ import configobj
 
 import sentry_sdk
 
+import parqueryd
 import parqueryd.config
 from parqueryd.controller import ControllerNode
 from parqueryd.worker import WorkerNode, DownloaderNode, MoveparquetNode
@@ -34,7 +35,8 @@ def main():
     if parqueryd.config.SENTRY_DSN is not None:
         sentry_sdk.init(
             dsn=parqueryd.config.SENTRY_DSN,
-            traces_sample_rate=1.0
+            traces_sample_rate=1.0,
+            environment='legacy-parqueryd-{}'.format(parqueryd.__version__)
         )
 
     config = configobj.ConfigObj('/etc/parqueryd.cfg')
@@ -42,16 +44,18 @@ def main():
     azure_conn_string = config.get('azure_conn_string', None)
 
     if args.worker_type == 'controller':
-        ControllerNode(redis_url=redis_url, loglevel=loglevel, azure_conn_string=azure_conn_string).go()
+        node = ControllerNode(redis_url=redis_url, loglevel=loglevel, azure_conn_string=azure_conn_string)
 
     elif args.worker_type == 'worker':
-        WorkerNode(redis_url=redis_url, loglevel=loglevel, data_dir=args.data_dir).go()
+        node = WorkerNode(redis_url=redis_url, loglevel=loglevel, data_dir=args.data_dir)
 
     elif args.worker_type == 'downloader':
-        DownloaderNode(redis_url=redis_url, loglevel=loglevel, azure_conn_string=azure_conn_string).go()
+        node = DownloaderNode(redis_url=redis_url, loglevel=loglevel, azure_conn_string=azure_conn_string)
 
     elif args.worker_type == 'moveparquet':
-        MoveparquetNode(redis_url=redis_url, loglevel=loglevel).go()
+        node = MoveparquetNode(redis_url=redis_url, loglevel=loglevel)
+    
+    node.go()
 
 
 if __name__ == '__main__':
