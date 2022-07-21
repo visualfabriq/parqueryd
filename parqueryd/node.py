@@ -36,12 +36,14 @@ def main():
     redis_url = config.get('redis_url', 'redis://127.0.0.1:6379/0')
     azure_conn_string = config.get('azure_conn_string', None)
     sentry_dsn = config.get('sentry_dsn', None)
+    environment = config.get('environment', 'unknown')
 
     if sentry_dsn is not None:
         sentry_sdk.init(
             dsn=sentry_dsn,
             traces_sample_rate=1.0,
-            environment='legacy-parqueryd-{}'.format(parqueryd.__version__)
+            environment='legacy-parqueryd-{}'.format(environment),
+            release=str(parqueryd.__version__)
         )
 
     if args.worker_type == 'controller':
