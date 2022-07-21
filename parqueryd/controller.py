@@ -605,11 +605,11 @@ class ControllerNode(object):
                 self.logger.debug('Keyboard Interrupt')
                 self.kill()
             except RPCError as e:
-                self.logger.error(e)
+                self.logger.exception(e)
                 # raise in controller would be bad (?)
                 # raise e 
             except:
-                self.logger.error("Exception %s" % traceback.format_exc())
+                self.logger.exception("Exception %s" % traceback.format_exc())
 
         self.logger.info('Stopping')
         for x in (os.path.join(RUNFILES_LOCATION, 'parqueryd_controller.pid'),
