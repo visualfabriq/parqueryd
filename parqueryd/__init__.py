@@ -1,6 +1,9 @@
+import os
 import logging
 # from version import __version__
 
+pre_release_version = os.getenv('PRE_RELEASE_VERISION', '')
+__version__ = '0.1.55{}'.format(pre_release_version)
 
 # initalize logger
 logger = logging.getLogger('parqueryd')
