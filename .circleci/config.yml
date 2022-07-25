@@ -109,15 +109,15 @@ workflows:
   version: 2.1
   build-and-release:
     jobs:
-      - test:
-          context: codeartifact-dev
-          name: py2
-          runtime: "2.7"
-
-      - test:
-          context: codeartifact-dev
-          name: py3
-          runtime: "3.7"
+#      - test:
+#          context: codeartifact-dev
+#          name: py2
+#          runtime: "2.7"
+#
+#      - test:
+#          context: codeartifact-dev
+#          name: py3
+#          runtime: "3.7"
 
       - build-and-push:
           context: codeartifact-dev
