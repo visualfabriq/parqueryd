@@ -42,7 +42,8 @@ jobs:
             export CODEARTIFACT_TOKEN=$(aws --output text codeartifact get-authorization-token --domain visualfabriq --query authorizationToken)
             export PIP_TRUSTED_HOST="visualfabriq-${AWS_ACCOUNT_ID}.d.codeartifact.${AWS_DEFAULT_REGION}.amazonaws.com"
             export PIP_INDEX_URL="https://aws:${CODEARTIFACT_TOKEN}@${PIP_TRUSTED_HOST}/pypi/private/simple"
-            docker-compose -f docker-compose.yml up --build -d
+            docker-compose -f docker-compose.yml build
+            docker-compose -f docker-compose.yml up -d
       - run:
           name: Sleep 30 seconds waiting for localstack service building
           command: sleep 30
