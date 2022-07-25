@@ -132,9 +132,9 @@ workflows:
 
       - build-and-push:
           context: codeartifact-dev
-          requires:
-            - py2
-            - py3
+#          requires:
+#            - py2
+#            - py3
           is-pre-release: true
           filters:
             branches:
