@@ -92,3 +92,5 @@ ENV/
 
 # Visual Studio Code IDE
 .vscode
+
+.idea
