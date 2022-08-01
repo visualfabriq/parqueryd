@@ -10,7 +10,7 @@ from __future__ import absolute_import
 import codecs
 import os
 
-from setuptools import setup, Extension, find_packages
+from setuptools import setup, find_packages
 from os.path import abspath
 from sys import version_info as v
 from setuptools.command.build_ext import build_ext as _build_ext
@@ -79,6 +79,7 @@ install_requires = [
     'pyzmq==19.0.2',
     'redis~=3.5;python_version=="2.7"',
     'redis>=3.5;python_version>="3.7"',
+    "sentry-sdk",
     'smart-open==1.10.1;python_version=="2.7"',
     'smart-open>=1.11.1;python_version>="3.7"'
 ]
@@ -144,7 +145,8 @@ setup(
     zip_safe=True,
     entry_points={
         'console_scripts': [
-            'parqueryd = parqueryd.node:main'
+            'parqueryd = parqueryd.node:main',
+            'parqueryd_local = parqueryd.connect_local:main',
         ]
     }
 )

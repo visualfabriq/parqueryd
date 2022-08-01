@@ -24,7 +24,7 @@ from parquery.aggregate import aggregate_pq
 from parquery.transport import serialize_pa_table
 
 import parqueryd.config
-from parqueryd.exceptions import WORKER_MAX_MEMORY_KB, FileTooBigError, MissingDimensionError, RPCError
+from parqueryd.exceptions import WORKER_MAX_MEMORY_KB, FileTooBigError, RPCError
 from parqueryd.messages import msg_factory, WorkerRegisterMessage, ErrorMessage, BusyMessage, StopMessage, \
     DoneMessage, TicketDoneMessage
 from parqueryd.tool import rm_file_or_dir, ens_unicode, ens_bytes
@@ -238,8 +238,8 @@ class WorkerBase(object):
             self.logger.critical('args are: %s', args)
             self.logger.critical(
                 'Memory usage (KB) %s > %s, restarting', rss_kb, WORKER_MAX_MEMORY_KB)
-            self.running = False  
-            raise FileTooBigError()          
+            self.running = False
+            raise FileTooBigError()
 
     def handle_work(self, msg):
         raise NotImplementedError
@@ -300,7 +300,7 @@ class WorkerNode(WorkerBase):
             else:
                 msg['data'] = serialize_pa_table(pa_table)
         except Exception as e:
-            # TODO: parse to proper exception type            
+            # TODO: parse to proper exception type
             raise RPCError(e)
 
         return msg
