@@ -15,6 +15,8 @@ import numpy as np
 import pandas as pd
 import pytest
 import redis
+
+from parqueryd import worker_config
 from parquery.write import df_to_parquet
 
 import parqueryd
@@ -63,9 +65,9 @@ def redis_server():
 
 @pytest.fixture
 def clear_incoming():
-    if os.path.isdir(parqueryd.config.INCOMING):
-        shutil.rmtree(parqueryd.config.INCOMING)
-    os.makedirs(parqueryd.config.INCOMING)
+    if os.path.isdir(worker_config.INCOMING):
+        shutil.rmtree(worker_config.INCOMING)
+    os.makedirs(worker_config.INCOMING)
 
 
 @pytest.fixture
@@ -123,7 +125,7 @@ def test_downloader(redis_server, downloader, tmpdir):
         node_filename_slot = '%s_%s' % (socket.gethostname(), 's3://parquet/test.parquet')
         ticket = str(uuid4())
 
-        incoming_dir = parqueryd.config.INCOMING
+        incoming_dir = worker_config.INCOMING
         assert not glob.glob(os.path.join(incoming_dir, '*'))
 
         redis_server.hset(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket, node_filename_slot, progress_slot)

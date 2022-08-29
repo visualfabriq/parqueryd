@@ -8,6 +8,7 @@ import sentry_sdk
 
 import parqueryd
 import parqueryd.config
+from parqueryd import worker_config
 from parqueryd.controller import ControllerNode
 from parqueryd.worker import WorkerNode, DownloaderNode, MoveparquetNode
 
@@ -17,7 +18,7 @@ def main():
     parser = argparse.ArgumentParser(description='Start parqueryd worker.')
     parser.add_argument("worker_type", choices=NODE_TYPES,
                         help='Type of node to run')
-    parser.add_argument('--data_dir', default=parqueryd.config.DEFAULT_DATA_DIR,
+    parser.add_argument('--data_dir', default=worker_config.DEFAULT_DATA_DIR,
                         help='Local directory worker nodes will read from')
     parser.add_argument("-v", "--verbosity", action="count",
                         help="Increase output verbosity")

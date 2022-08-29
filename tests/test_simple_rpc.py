@@ -8,6 +8,8 @@ import pandas as pd
 import pytest
 import redis
 from pandas.util.testing import assert_frame_equal
+
+from parqueryd import worker_config
 from parquery.write import df_to_parquet
 
 import parqueryd.config
@@ -72,7 +74,7 @@ def rpc():
 @pytest.fixture(scope='module')
 def shards(taxi_df):
     shard_filenames = []
-    single_parquet = os.path.join(parqueryd.config.DEFAULT_DATA_DIR, 'yellow_tripdata_2016-01.parquet')
+    single_parquet = os.path.join(worker_config.DEFAULT_DATA_DIR, 'yellow_tripdata_2016-01.parquet')
     df_to_parquet(taxi_df, single_parquet)
     shard_filenames.append(single_parquet)
 
@@ -86,7 +88,7 @@ def shards(taxi_df):
         elif count == NR_SHARDS:
             break
 
-        shard_file = os.path.join(parqueryd.config.DEFAULT_DATA_DIR, 'yellow_tripdata_2016-01-%s.parquet' % count)
+        shard_file = os.path.join(worker_config.DEFAULT_DATA_DIR, 'yellow_tripdata_2016-01-%s.parquet' % count)
         df_to_parquet(taxi_df[idx:idx + step], shard_file)
         shard_filenames.append(shard_file)
         count += 1

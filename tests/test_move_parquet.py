@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 import pytest
 import redis
+
+from parqueryd import worker_config
 from parquery.write import df_to_parquet
 
 import parqueryd.config
@@ -33,12 +35,12 @@ def redis_server():
 
 @pytest.fixture
 def clear_dirs():
-    if os.path.isdir(parqueryd.config.INCOMING):
-        shutil.rmtree(parqueryd.config.INCOMING)
-    if os.path.isdir(parqueryd.config.DEFAULT_DATA_DIR):
-        shutil.rmtree(parqueryd.config.DEFAULT_DATA_DIR)
-    os.makedirs(parqueryd.config.DEFAULT_DATA_DIR)
-    os.makedirs(parqueryd.config.INCOMING)
+    if os.path.isdir(worker_config.INCOMING):
+        shutil.rmtree(worker_config.INCOMING)
+    if os.path.isdir(worker_config.DEFAULT_DATA_DIR):
+        shutil.rmtree(worker_config.DEFAULT_DATA_DIR)
+    os.makedirs(worker_config.DEFAULT_DATA_DIR)
+    os.makedirs(worker_config.INCOMING)
 
 @pytest.fixture
 def mover():
@@ -69,7 +71,7 @@ def test_moveparquet(redis_server, tmpdir):
 
     # copy the parquet directory to bqueyd.INCOMING
     ticket = str(uuid4())
-    ticket_dir = os.path.join(parqueryd.config.INCOMING, ticket + '_test_mover.parquet')
+    ticket_dir = os.path.join(worker_config.INCOMING, ticket + '_test_mover.parquet')
     shutil.copy(local_parquet, ticket_dir)
 
     # Construct the redis entry that before downloading
@@ -83,7 +85,7 @@ def test_moveparquet(redis_server, tmpdir):
 
     # At this stage, we don't expect the parquet directory to be moved to parqueryd.DEFAULT_DATA_DIR, because the progress
     # slot has not been updated yet
-    files_in_default_data_dir = os.listdir(parqueryd.config.DEFAULT_DATA_DIR)
+    files_in_default_data_dir = os.listdir(worker_config.DEFAULT_DATA_DIR)
     files_in_default_data_dir.sort()
     assert files_in_default_data_dir == ['incoming']
     # ticket_dir still exists
@@ -95,7 +97,7 @@ def test_moveparquet(redis_server, tmpdir):
 
     # Sleep again
     sleep(5)
-    files_in_default_data_dir = os.listdir(parqueryd.config.DEFAULT_DATA_DIR)
+    files_in_default_data_dir = os.listdir(worker_config.DEFAULT_DATA_DIR)
     files_in_default_data_dir.sort()
     assert files_in_default_data_dir == ['incoming', 'test_mover.parquet', 'test_mover.parquet.metadata']
     # ticket_dir should have been deleted.

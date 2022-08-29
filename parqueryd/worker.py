@@ -20,10 +20,12 @@ import redis
 import smart_open
 import zmq
 from azure.storage.blob import BlobClient
+
 from parquery.aggregate import aggregate_pq
 from parquery.transport import serialize_pa_table
 
 import parqueryd.config
+from parqueryd import worker_config
 from parqueryd.exceptions import WORKER_MAX_MEMORY_KB, FileTooBigError, RPCError
 from parqueryd.messages import msg_factory, WorkerRegisterMessage, ErrorMessage, BusyMessage, StopMessage, \
     DoneMessage, TicketDoneMessage
@@ -38,7 +40,7 @@ DOWNLOAD_DELAY = 5  # how often in seconds to check for downloads
 
 
 class WorkerBase(object):
-    def __init__(self, data_dir=parqueryd.config.DEFAULT_DATA_DIR, redis_url='redis://127.0.0.1:6379/0',
+    def __init__(self, data_dir=worker_config.DEFAULT_DATA_DIR, redis_url='redis://127.0.0.1:6379/0',
                  loglevel=logging.DEBUG,
                  restart_check=True, azure_conn_string=None):
         if not os.path.exists(data_dir) or not os.path.isdir(data_dir):
@@ -390,10 +392,10 @@ class DownloaderNode(WorkerBase):
         tmp = self.redis_server.hget(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ens_unicode(ticket), node_filename_slot)
         if not tmp:
             # Clean up the whole ticket contents from disk
-            ticket_path = os.path.join(parqueryd.config.INCOMING, ens_unicode(ticket))
+            ticket_path = os.path.join(worker_config.INCOMING, ens_unicode(ticket))
             self.logger.debug('Now removing entire ticket %s', ens_unicode(ticket_path))
             for filename in glob.glob(ticket_path + '*'):
-                rm_file_or_dir(os.path.join(parqueryd.config.INCOMING, ens_unicode(filename)))
+                rm_file_or_dir(os.path.join(worker_config.INCOMING, ens_unicode(filename)))
             raise Exception("Ticket %s progress slot %s not found, aborting download" %
                             (ens_unicode(ticket), ens_unicode(node_filename_slot)))
         # A progress slot contains a timestamp_filesize
@@ -461,10 +463,10 @@ class DownloaderNode(WorkerBase):
         self.file_downloader_progress(ticket, fileurl, 'DONE')
 
     def _get_prod_name(self, file_name):
-        return os.path.join(parqueryd.config.DEFAULT_DATA_DIR, ens_unicode(file_name))
+        return os.path.join(worker_config.DEFAULT_DATA_DIR, ens_unicode(file_name))
 
     def _get_temp_name(self, ticket, file_name):
-        return os.path.join(parqueryd.config.INCOMING, ens_unicode(ticket) + '_' + ens_unicode(file_name))
+        return os.path.join(worker_config.INCOMING, ens_unicode(ticket) + '_' + ens_unicode(file_name))
 
     def _get_s3_conn(self):
         """Create a boto3 """
@@ -527,7 +529,7 @@ class MoveparquetNode(DownloaderNode):
 
         # A notification from the controller that all files are downloaded on all nodes,
         # the files in this ticket can be moved into place
-        ticket_path = os.path.join(parqueryd.config.INCOMING, ticket + '_*')
+        ticket_path = os.path.join(worker_config.INCOMING, ticket + '_*')
         file_name_list = glob.glob(ticket_path)
         if file_name_list:
             for filename in file_name_list:
