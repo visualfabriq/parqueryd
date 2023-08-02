@@ -57,7 +57,6 @@ class RPC(object):
                 self.address = c
                 break
             except:
-                logging.exception("Unable to connect to %s", c)
                 continue
         if reply:
             # Now set the timeout to the actual requested
