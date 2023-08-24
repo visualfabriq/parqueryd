@@ -75,7 +75,7 @@ class ControllerNode(object):
                 tmp = [addr, msg_buf]
             self.socket.send_multipart(tmp)
         except zmq.ZMQError as ze:
-            self.logger.critical("Problem with %s: %s" % (addr, ze))
+            self.logger.warning("Problem with %s: %s" % (addr, ze))
 
     def connect_to_others(self):
         # Make sure own address is still registered
