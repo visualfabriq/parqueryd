@@ -1,3 +1,7 @@
+Release 0.3.0
+=======================
+- New parquery version with memory optimizations
+
 Release 0.1.54
 =======================
 - Fixed RPC logic receiving binary pyarrow table handling
