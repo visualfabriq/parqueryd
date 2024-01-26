@@ -11,23 +11,11 @@ import codecs
 import os
 
 from setuptools import setup, find_packages
-from os.path import abspath
 from sys import version_info as v
-from setuptools.command.build_ext import build_ext as _build_ext
-
 
 # Check this Python version is supported
 if any([(3,) < v < (3, 7)]):
     raise Exception("Unsupported Python version %d.%d. Requires Python >= 3.7 " % v[:2])
-
-
-class build_ext(_build_ext):
-    def finalize_options(self):
-        _build_ext.finalize_options(self)
-        # Prevent numpy from thinking it is still in its setup process:
-        __builtins__.__NUMPY_SETUP__ = False
-        import numpy
-        self.include_dirs.append(numpy.get_include())
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -42,20 +30,7 @@ def read(*parts):
 
 
 # Sources & libraries
-inc_dirs = [abspath('parqueryd')]
-try:
-    import numpy as np
-    inc_dirs.append(np.get_include())
-except ImportError as e:
-    pass
-lib_dirs = []
-libs = []
-def_macros = []
-sources = []
-
-cmdclass = {'build_ext': build_ext}
-
-optional_libs = ['numexpr>=2.6.9']
+cmdclass = {}
 
 install_requires = [
     'azure-storage-blob>=12.4.0',
