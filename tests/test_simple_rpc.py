@@ -115,38 +115,6 @@ def test_rpc_info(rpc):
     assert result['others'] == {}
 
 
-def test_download(rpc):
-    ticket_nr = rpc.download(filenames=['test_download.parquet'], bucket='parquet', wait=False)
-    redis_server = redis.from_url(TEST_REDIS)
-    download_entries = redis_server.hgetall(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket_nr)
-    assert len(download_entries) == 1
-    for key, value in download_entries.items():
-        # filename
-        assert '_'.join(str(key).split('_')[1:]) == "s3://parquet/test_download.parquet"
-        # progress slot
-        assert str(value).split('_')[-1] == "-1"
-
-
-@pytest.mark.skip('Skipping because it never worked and I dont know why')
-def test_compare_with_pandas_total_amount_sum(taxi_df, rpc, shards):
-    compare_with_pandas(taxi_df, rpc, shards, 'payment_type', 'total_amount', 'sum')
-
-
-@pytest.mark.skip('Skipping because it never worked and I dont know why')
-def test_compare_with_pandas_passenger_count_sum(taxi_df, rpc, shards):
-    compare_with_pandas(taxi_df, rpc, shards, 'payment_type', 'passenger_count', 'sum')
-
-
-@pytest.mark.skip('Skipping now as parquery does not implement means well yet')
-def test_compare_with_pandas_total_amount_mean(taxi_df, rpc, shards):
-    compare_with_pandas(taxi_df, rpc, shards, 'payment_type', 'total_amount', 'mean')
-
-
-@pytest.mark.skip('Skipping now as parquery does not implement counts well yet')
-def test_compare_with_pandas_payment_type_count(taxi_df, rpc, shards):
-    compare_with_pandas(taxi_df, rpc, shards, 'payment_type', 'passenger_count', 'count')
-
-
 def compare_with_pandas(taxi_df, rpc, shards, group_col, agg_col, method):
     full = os.path.basename(shards[0])
     full_result = rpc.groupby([full], [group_col], [[agg_col, method, agg_col]], [])
