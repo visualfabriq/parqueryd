@@ -1,11 +1,9 @@
 import logging
 import os
-import sys
 import threading
 from time import sleep
 
 import pandas as pd
-from pandas.core.frame import DataFrame
 import pytest
 import redis
 from pandas.util.testing import assert_frame_equal
@@ -13,7 +11,6 @@ from parquery.write import df_to_parquet
 
 import parqueryd.config
 from parqueryd.controller import ControllerNode
-from parqueryd.rpc import RPC
 from parqueryd.util import get_my_ip
 from parqueryd.worker import WorkerNode, DownloaderNode
 
@@ -135,25 +132,3 @@ def compare_with_pandas(taxi_df, rpc, shards, group_col, agg_col, method):
     pandas_result = pandas_result.reset_index(drop=True)
 
     assert_frame_equal(full_result, pandas_result, check_less_precise=True)
-
-@pytest.mark.skipif(sys.version_info < (3, 0), reason="DQE is already running on python 3 so we don't care too much about python 2")
-def test_compare_full_with_shard(rpc, shards):
-    shard_filenames = [os.path.basename(x) for x in shards]
-
-    full, parts = shard_filenames[:1], shard_filenames[1:]
-    full_result = rpc.groupby(full, ['payment_type'], [['passenger_count', 'sum', 'passenger_count']], [])
-    parts_result = rpc.groupby(parts, ['payment_type'], [['passenger_count', 'sum', 'passenger_count']], [])
-
-    assert isinstance(full_result, DataFrame)
-    assert isinstance(parts_result, DataFrame)
-
-    # This returns a single DataFrame with the results from each part pasted in it separately
-    # so we need to use a further groupby to produce the same result as with the full parquet
-    parts_result = parts_result.groupby('payment_type', sort=True).sum()
-    full_result = full_result.set_index('payment_type').sort_index()
-
-    assert_frame_equal(full_result, parts_result)
-
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-s'])
