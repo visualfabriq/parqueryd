@@ -5,6 +5,7 @@ import threading
 from time import sleep
 
 import pandas as pd
+from pandas.core.frame import DataFrame
 import pytest
 import redis
 from pandas.util.testing import assert_frame_equal
@@ -12,7 +13,6 @@ from parquery.write import df_to_parquet
 
 import parqueryd.config
 from parqueryd.controller import ControllerNode
-from parqueryd.rpc import RPC
 from parqueryd.util import get_my_ip
 from parqueryd.worker import WorkerNode, DownloaderNode
 
@@ -121,9 +121,9 @@ def test_download(rpc):
     assert len(download_entries) == 1
     for key, value in download_entries.items():
         # filename
-        assert '_'.join(key.split('_')[1:]) == "s3://parquet/test_download.parquet"
+        assert '_'.join(str(key).split('_')[1:]) == "s3://parquet/test_download.parquet"
         # progress slot
-        assert value.split('_')[-1] == "-1"
+        assert str(value).split('_')[-1] == "-1"
 
 
 @pytest.mark.skip('Skipping because it never worked and I dont know why')
@@ -175,8 +175,8 @@ def test_compare_full_with_shard(rpc, shards):
     full_result = rpc.groupby(full, ['payment_type'], [['passenger_count', 'sum', 'passenger_count']], [])
     parts_result = rpc.groupby(parts, ['payment_type'], [['passenger_count', 'sum', 'passenger_count']], [])
 
-    assert isinstance(full_result, pd.DataFrame)
-    assert isinstance(parts_result, pd.DataFrame)
+    assert isinstance(full_result, DataFrame)
+    assert isinstance(parts_result, DataFrame)
 
     # This returns a single DataFrame with the results from each part pasted in it separately
     # so we need to use a further groupby to produce the same result as with the full parquet
