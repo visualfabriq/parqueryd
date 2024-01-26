@@ -1,3 +1,7 @@
+Release 1.0.0
+=======================
+- Python 3 only version
+
 Release 0.3.0
 =======================
 - New parquery version with memory optimizations

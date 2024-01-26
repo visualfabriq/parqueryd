@@ -1,6 +1,3 @@
-from this import d
-import pytest
-
 from parqueryd.exceptions import RPCError, RetriesExceededError, MissingDimensionError
 
 def test_RPCError():

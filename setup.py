@@ -11,24 +11,11 @@ import codecs
 import os
 
 from setuptools import setup, find_packages
-from os.path import abspath
 from sys import version_info as v
-from setuptools.command.build_ext import build_ext as _build_ext
-
 
 # Check this Python version is supported
-if any([v < (2, 6), (3,) < v < (3, 7)]):
-    raise Exception("Unsupported Python version %d.%d. Requires Python >= 2.7 "
-                    "or >= 3.7." % v[:2])
-
-
-class build_ext(_build_ext):
-    def finalize_options(self):
-        _build_ext.finalize_options(self)
-        # Prevent numpy from thinking it is still in its setup process:
-        __builtins__.__NUMPY_SETUP__ = False
-        import numpy
-        self.include_dirs.append(numpy.get_include())
+if any([(3,) < v < (3, 7)]):
+    raise Exception("Unsupported Python version %d.%d. Requires Python >= 3.7 " % v[:2])
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -43,57 +30,34 @@ def read(*parts):
 
 
 # Sources & libraries
-inc_dirs = [abspath('parqueryd')]
-try:
-    import numpy as np
-    inc_dirs.append(np.get_include())
-except ImportError as e:
-    pass
-lib_dirs = []
-libs = []
-def_macros = []
-sources = []
-
-cmdclass = {'build_ext': build_ext}
-
-optional_libs = ['numexpr>=2.6.9']
+cmdclass = {}
 
 install_requires = [
-    'azure-storage-blob==12.3.2;python_version=="2.7"',
-    'azure-storage-blob>=12.4.0;python_version>="3.7"',
-    'boto3==1.17.95;python_version=="2.7"',
-    'boto3>=1.17.95;python_version>="3.7"',
+    'azure-storage-blob>=12.4.0',
+    'boto3>=1.17.95',
     'configobj>=5.0.6',
-    'msrest==0.6.21;python_version=="2.7"',
     'netifaces>=0.10.9',
-    'numexpr==2.7.3;python_version=="2.7"',
-    'numexpr>=2.7.3;python_version>="3.7"',
-    'numpy==1.16.6;python_version=="2.7"',
-    'numpy>=1.19.1;python_version>="3.7"',
-    'pyarrow==0.16.0;python_version=="2.7"',
-    'pyarrow>=1.0.0;python_version>="3.7"',
-    'pandas==0.24.2;python_version=="2.7"',
-    'pandas>=1.1;python_version>="3.7"',
-    'parquery~=0.4, >=0.4.0',
+    'numexpr>=2.7.3',
+    'numpy>=1.22;python_version>="3.8"',
+    'numpy>=1.19.1;python_version=="3.7"',
+    'pyarrow>=1.0.0',
+    'pandas>=1.1',
+    'parquery~=0.5.0',
     'psutil>=5.7.2',
     'pyzmq==19.0.2',
-    'redis~=3.5;python_version=="2.7"',
-    'redis>=3.5;python_version>="3.7"',
+    'redis>=3.5',
     "sentry-sdk",
-    'smart-open==1.10.1;python_version=="2.7"',
-    'smart-open>=1.11.1;python_version>="3.7"'
+    'smart-open>=1.11.1'
 ]
 setup_requires = []
 tests_requires = [
     'pytest>=4.6.11',
     'pytest-cov>=2.10.0',
     'codacy-coverage>=1.3.11',
-    'moto==2.1.0;python_version=="2.7"',
-    'moto;python_version>="3.7"',
+    'moto',
 ]
 dev_requires = [
-    "ipython==5.8.0;python_version=='2.7'",
-    "ipython>=7.20;python_version>='3.7'"
+    "ipython>=7.20"
 ]
 extras_requires = {
     'all': tests_requires + dev_requires,

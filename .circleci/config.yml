@@ -87,35 +87,10 @@ jobs:
       - codeartifact/push:
           tool: twine
 
-  deploy-dqe:
-    executor: vf-dqe-executor
-    parameters:
-      region:
-        type: string
-    environment:
-      AWS_REGION: <<parameters.region>>
-      DOCUMENT_NAME: Deploy-dqe
-      SERVICE_NAME: DQE
-    steps:
-      - checkout
-      - aws-cli/setup:
-          profile-name: default
-      - run:
-          name: Deploy Parqueryd server
-          command: |
-            stty rows 64 cols 306
-            ./deployment/deploy.sh
-
-
 workflows:
   version: 2.1
   build-and-release:
     jobs:
-      - test:
-          context: codeartifact-dev
-          name: py2
-          runtime: "2.7"
-
       - test:
           context: codeartifact-dev
           name: py37
@@ -129,7 +104,6 @@ workflows:
       - build-and-push:
           context: codeartifact-dev
           requires:
-            - py2
             - py37
             - py310
           filters:
@@ -141,7 +115,6 @@ workflows:
       - build-and-push:
           context: codeartifact-dev
           requires:
-            - py2
             - py37
             - py310
           is-pre-release: true
@@ -154,16 +127,6 @@ workflows:
     jobs:
       - test:
           context: codeartifact-dev
-          name: py2
-          runtime: "2.7"
-          filters:
-            branches:
-              only:
-                - master
-                - main
-
-      - test:
-          context: codeartifact-dev
           name: py3
           runtime: "3.7"
           filters:
@@ -171,59 +134,3 @@ workflows:
               only:
                 - master
                 - main
-
-      - approve:
-          name: Approve Deploy to Europe
-          context: vf-deploy-dqe-prod
-          type: approval
-          requires:
-            - py2
-            - py3
-      - deploy-dqe:
-          name: Deploy to Europe
-          context: vf-deploy-dqe-prod
-          requires:
-            - Approve Deploy to Europe
-          region: eu-west-1
-
-      - approve:
-          name: Approve Deploy to USA
-          context: vf-deploy-dqe-prod
-          type: approval
-          requires:
-            - py2
-            - py3
-      - deploy-dqe:
-          name: Deploy to USA
-          context: vf-deploy-dqe-prod
-          requires:
-            - Approve Deploy to USA
-          region: us-east-1
-
-      - approve:
-          name: Approve Deploy to South America
-          context: vf-deploy-dqe-prod
-          type: approval
-          requires:
-            - py2
-            - py3
-      - deploy-dqe:
-          name: Deploy to South America
-          context: vf-deploy-dqe-prod
-          requires:
-            - Approve Deploy to South America
-          region: sa-east-1
-
-      - approve:
-          name: Approve Deploy to Asia
-          context: vf-deploy-dqe-prod
-          type: approval
-          requires:
-            - py2
-            - py3
-      - deploy-dqe:
-          name: Deploy to Asia
-          context: vf-deploy-dqe-prod
-          requires:
-            - Approve Deploy to Asia
-          region: ap-northeast-1
