@@ -41,7 +41,7 @@ install_requires = [
     'numpy>=1.19.1',
     'pyarrow>=1.0.0',
     'pandas>=1.1',
-    'parquery>=1.0.0',
+    'parquery~=0.5.0',
     'psutil>=5.7.2',
     'pyzmq==19.0.2',
     'redis>=3.5',
