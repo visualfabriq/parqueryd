@@ -11,6 +11,7 @@ from parquery.write import df_to_parquet
 
 import parqueryd.config
 from parqueryd.controller import ControllerNode
+from parqueryd.rpc import RPC
 from parqueryd.util import get_my_ip
 from parqueryd.worker import WorkerNode, DownloaderNode
 
