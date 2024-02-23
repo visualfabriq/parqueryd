@@ -37,7 +37,7 @@ install_requires = [
     'boto3>=1.17.95',
     'configobj>=5.0.6',
     'netifaces>=0.10.9',
-    'numexpr>=2.7.3',
+    'numexpr>=2.7.3;python_version>="3.7"',
     'numpy>=1.22;python_version>="3.8"',
     'numpy>=1.19.1;python_version=="3.7"',
     'pyarrow>=1.0.0',
