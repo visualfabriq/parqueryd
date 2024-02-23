@@ -3,7 +3,7 @@ import logging
 # from version import __version__
 
 pre_release_version = os.getenv('PRE_RELEASE_VERSION', '')
-__version__ = '1.0.1{}'.format(pre_release_version)
+__version__ = '1.0.2{}'.format(pre_release_version)
 
 # initalize logger
 logger = logging.getLogger('parqueryd')
