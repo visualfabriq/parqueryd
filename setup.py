@@ -45,7 +45,8 @@ install_requires = [
     'parquery~=0.5.1;python_version=="2.7"',
     'parquery>=1.0.2;python_version>="3.7"',
     'psutil>=5.7.2',
-    'pyzmq==19.0.2',
+    'pyzmq==19.0.2;python_version<"3.11"',
+    'pyzmq==25.1.2;python_version>="3.11"',
     'redis>=3.5',
     "sentry-sdk",
     'smart-open>=1.11.1'
