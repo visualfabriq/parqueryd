@@ -1,7 +1,7 @@
 version: 2.1
 orbs:
   aws-cli: circleci/aws-cli@3.1
-  codeartifact: visualfabriq/codeartifact@1.1.1
+  codeartifact: visualfabriq/codeartifact@1.2
 
 parameters:
   workingdir:

@@ -14,7 +14,7 @@ from setuptools import setup, find_packages
 from sys import version_info as v
 
 # Check this Python version is supported
-if any([(3,) < v < (3, 7)]):
+if v > (3, 7):
     raise Exception("Unsupported Python version %d.%d. Requires Python >= 3.7 " % v[:2])
 
 
@@ -78,12 +78,7 @@ classifiers = [
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Operating System :: Microsoft :: Windows',
     'Operating System :: Unix',
-    'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.7',
-    'Programming Language :: Python :: 3.8',
-    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.11',
 ]
 
 setup(
