@@ -58,30 +58,30 @@ cmdclass = {'build_ext': build_ext}
 optional_libs = ['numexpr>=2.6.9']
 
 install_requires = [
-    'azure-storage-blob>=12.4.0;python_version>="3.11"',
-    'boto3>=1.17.95;python_version>="3.11"',
+    'azure-storage-blob>=12.4.0',
+    'boto3>=1.17.95',
     'configobj>=5.0.6',
     'netifaces>=0.10.9',
-    'numexpr==2.8.4;python_version>="3.11"',
-    'numpy>=2;python_version>="3.11"',
-    'pyarrow>=1.0.0;python_version>="3.11"',
-    'pandas~=2.2.2;python_version>="3.11"',
+    'numexpr==2.8.4',
+    'numpy>=2',
+    'pyarrow>=1.0.0',
+    'pandas~=2.2.2',
     'parquery~=0.3.dev0, >=0.3.2',
     'psutil>=5.7.2',
     'pyzmq==19.0.2',
-    'redis>=3.5;python_version>="3.11"',
+    'redis>=3.5',
     "sentry-sdk",
-    'smart-open>=1.11.1;python_version>="3.11"'
+    'smart-open>=1.11.1'
 ]
 setup_requires = []
 tests_requires = [
     'pytest>=4.6.11',
     'pytest-cov>=2.10.0',
     'codacy-coverage>=1.3.11',
-    'moto;python_version>="3.11"',
+    'moto',
 ]
 dev_requires = [
-    "ipython>=7.20;python_version>='3.11'"
+    "ipython>=7.20"
 ]
 extras_requires = {
     'all': tests_requires + dev_requires,
