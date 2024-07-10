@@ -93,13 +93,12 @@ workflows:
     jobs:
       - test:
           context: codeartifact-dev
-          name: py311
           runtime: "3.11"
 
       - build-and-push:
           context: codeartifact-dev
           requires:
-            - py311
+            - test
           filters:
             branches:
               only:
@@ -109,7 +108,7 @@ workflows:
       - build-and-push:
           context: codeartifact-dev
           requires:
-            - py310
+            - test
           is-pre-release: true
           filters:
             branches:
@@ -120,7 +119,6 @@ workflows:
     jobs:
       - test:
           context: codeartifact-dev
-          name: py311
           runtime: "3.11"
           filters:
             branches:
