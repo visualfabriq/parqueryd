@@ -1,3 +1,8 @@
+
+Release 0.3
+======================
+- Remove python 2 and 3.7 support and add 3.11
+
 Release 0.1.54
 =======================
 - Fixed RPC logic receiving binary pyarrow table handling
