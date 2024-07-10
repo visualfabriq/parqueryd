@@ -10,7 +10,7 @@ from uuid import uuid4
 import glob
 
 import boto3
-from moto import mock_s3
+from moto import mock_aws
 import numpy as np
 import pandas as pd
 import pytest
@@ -70,7 +70,7 @@ def clear_incoming():
 
 @pytest.fixture
 def downloader():
-    with mock_s3():
+    with mock_aws():
         downloader = LocalS3Downloader(redis_url=TEST_REDIS, loglevel=logging.DEBUG)
         downloader_thread = threading.Thread(target=downloader.go)
         downloader_thread.daemon = True
