@@ -113,7 +113,7 @@ workflows:
       - test:
           context: codeartifact-dev
           name: py3
-          runtime: "3.7"
+          runtime: "3.11"
 
       - build-and-push:
           context: codeartifact-dev
@@ -140,7 +140,7 @@ workflows:
       - test:
           context: codeartifact-dev
           name: py3
-          runtime: "3.7"
+          runtime: "3.11"
           filters:
             branches:
               only:
