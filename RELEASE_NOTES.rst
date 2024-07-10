@@ -1,3 +1,7 @@
+Release 1.1.0
+=======================
+- Remove python 3.7 support and add 3.11
+
 Release 1.0.0
 =======================
 - Python 3 only version

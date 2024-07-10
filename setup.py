@@ -14,8 +14,8 @@ from setuptools import setup, find_packages
 from sys import version_info as v
 
 # Check this Python version is supported
-if any([(3,) < v < (3, 7)]):
-    raise Exception("Unsupported Python version %d.%d. Requires Python >= 3.7 " % v[:2])
+if v < (3, 11):
+    raise Exception("Unsupported Python version %d.%d. Requires Python >= 3.11 " % v[:2])
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -37,16 +37,12 @@ install_requires = [
     'boto3>=1.17.95',
     'configobj>=5.0.6',
     'netifaces>=0.10.9',
-    'numexpr>=2.7.3;python_version>="3.7"',
-    'numpy>=1.22;python_version>="3.8"',
-    'numpy>=1.19.1;python_version=="3.7"',
+    'numpy>=2',
     'pyarrow>=1.0.0',
-    'pandas>=1.1',
-    'parquery~=0.5.1;python_version=="2.7"',
-    'parquery>=1.0.2;python_version>="3.7"',
+    'pandas~=2.2.2',
+    'parquery>=1.0.2',
     'psutil>=5.7.2',
-    'pyzmq==19.0.2;python_version<"3.11"',
-    'pyzmq==25.1.2;python_version>="3.11"',
+    'pyzmq==25.1.2',
     'redis>=3.5',
     "sentry-sdk",
     'smart-open>=1.11.1'
@@ -69,7 +65,7 @@ extras_requires = {
 ext_modules = []
 package_data = {}
 classifiers = [
-    'Development Status :: 4 - Beta',
+    'Development Status :: 5 - Production/Stable',
     'Intended Audience :: Developers',
     'Intended Audience :: Information Technology',
     'Intended Audience :: Science/Research',
@@ -78,12 +74,8 @@ classifiers = [
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Operating System :: Microsoft :: Windows',
     'Operating System :: Unix',
-    'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.7',
-    'Programming Language :: Python :: 3.8',
-    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.11',
 ]
 
 setup(

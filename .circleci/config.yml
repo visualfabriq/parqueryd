@@ -1,7 +1,7 @@
 version: 2.1
 orbs:
   aws-cli: circleci/aws-cli@3.1
-  codeartifact: visualfabriq/codeartifact@1.1.1
+  codeartifact: visualfabriq/codeartifact@1.2.0
 
 parameters:
   workingdir:
@@ -93,19 +93,13 @@ workflows:
     jobs:
       - test:
           context: codeartifact-dev
-          name: py37
-          runtime: "3.7"
-
-      - test:
-          context: codeartifact-dev
-          name: py310
-          runtime: "3.10"
+          name: py311
+          runtime: "3.11"
 
       - build-and-push:
           context: codeartifact-dev
           requires:
-            - py37
-            - py310
+            - py311
           filters:
             branches:
               only:
@@ -115,8 +109,7 @@ workflows:
       - build-and-push:
           context: codeartifact-dev
           requires:
-            - py37
-            - py310
+            - py311
           is-pre-release: true
           filters:
             branches:
@@ -128,7 +121,7 @@ workflows:
       - test:
           context: codeartifact-dev
           name: py3
-          runtime: "3.7"
+          runtime: "3.11"
           filters:
             branches:
               only:
