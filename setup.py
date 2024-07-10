@@ -40,7 +40,7 @@ install_requires = [
     'numpy>=2',
     'pyarrow>=1.0.0',
     'pandas~=2.2.2',
-    'parquery>=1.0.2',
+    'parquery==1.1.2.dev2', # TODO: update version
     'psutil>=5.7.2',
     'pyzmq==25.1.2',
     'redis>=3.5',
