@@ -1,3 +1,8 @@
+Release 1.1.0
+=======================
+- New python 3.11 compatibility for pandas and numpy support
+- Removes numexpr for easier integration
+
 Release 1.0.0
 =======================
 - Python 3 only version
