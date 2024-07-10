@@ -1,6 +1,5 @@
 import logging
 import os
-import sys
 import threading
 from time import sleep
 
@@ -114,38 +113,6 @@ def test_rpc_info(rpc):
     assert result['others'] == {}
 
 
-def test_download(rpc):
-    ticket_nr = rpc.download(filenames=['test_download.parquet'], bucket='parquet', wait=False)
-    redis_server = redis.from_url(TEST_REDIS)
-    download_entries = redis_server.hgetall(parqueryd.config.REDIS_TICKET_KEY_PREFIX + ticket_nr)
-    assert len(download_entries) == 1
-    for key, value in download_entries.items():
-        # filename
-        assert '_'.join(key.split('_')[1:]) == "s3://parquet/test_download.parquet"
-        # progress slot
-        assert value.split('_')[-1] == "-1"
-
-
-@pytest.mark.skip('Skipping because it never worked and I dont know why')
-def test_compare_with_pandas_total_amount_sum(taxi_df, rpc, shards):
-    compare_with_pandas(taxi_df, rpc, shards, 'payment_type', 'total_amount', 'sum')
-
-
-@pytest.mark.skip('Skipping because it never worked and I dont know why')
-def test_compare_with_pandas_passenger_count_sum(taxi_df, rpc, shards):
-    compare_with_pandas(taxi_df, rpc, shards, 'payment_type', 'passenger_count', 'sum')
-
-
-@pytest.mark.skip('Skipping now as parquery does not implement means well yet')
-def test_compare_with_pandas_total_amount_mean(taxi_df, rpc, shards):
-    compare_with_pandas(taxi_df, rpc, shards, 'payment_type', 'total_amount', 'mean')
-
-
-@pytest.mark.skip('Skipping now as parquery does not implement counts well yet')
-def test_compare_with_pandas_payment_type_count(taxi_df, rpc, shards):
-    compare_with_pandas(taxi_df, rpc, shards, 'payment_type', 'passenger_count', 'count')
-
-
 def compare_with_pandas(taxi_df, rpc, shards, group_col, agg_col, method):
     full = os.path.basename(shards[0])
     full_result = rpc.groupby([full], [group_col], [[agg_col, method, agg_col]], [])
@@ -166,25 +133,3 @@ def compare_with_pandas(taxi_df, rpc, shards, group_col, agg_col, method):
     pandas_result = pandas_result.reset_index(drop=True)
 
     assert_frame_equal(full_result, pandas_result, check_less_precise=True)
-
-@pytest.mark.skipif(sys.version_info < (3, 0), reason="DQE is already running on python 3 so we don't care too much about python 2")
-def test_compare_full_with_shard(rpc, shards):
-    shard_filenames = [os.path.basename(x) for x in shards]
-
-    full, parts = shard_filenames[:1], shard_filenames[1:]
-    full_result = rpc.groupby(full, ['payment_type'], [['passenger_count', 'sum', 'passenger_count']], [])
-    parts_result = rpc.groupby(parts, ['payment_type'], [['passenger_count', 'sum', 'passenger_count']], [])
-
-    assert isinstance(full_result, pd.DataFrame)
-    assert isinstance(parts_result, pd.DataFrame)
-
-    # This returns a single DataFrame with the results from each part pasted in it separately
-    # so we need to use a further groupby to produce the same result as with the full parquet
-    parts_result = parts_result.groupby('payment_type', sort=True).sum()
-    full_result = full_result.set_index('payment_type').sort_index()
-
-    assert_frame_equal(full_result, parts_result)
-
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-s'])

@@ -85,7 +85,7 @@ class WorkerBase(object):
                 self.logger.debug("Sending non-data message back to " + ens_unicode(addr))
                 self.socket.send_multipart([addr, msg.to_json()])
         except zmq.ZMQError as ze:
-            self.logger.critical("Problem with %s: %s" % (ens_unicode(addr), ze))
+            self.logger.warning("Problem with %s: %s" % (ens_unicode(addr), ze))
 
     def check_controllers(self):
         # Check the Redis set of controllers to see if any new ones have appeared,

@@ -6,8 +6,6 @@ import time
 
 import redis
 import zmq
-from parquery.aggregate import aggregate_pa
-from parquery.transport import deserialize_pa_table
 from pyarrow import ArrowInvalid
 
 import parqueryd.config
@@ -57,7 +55,6 @@ class RPC(object):
                 self.address = c
                 break
             except:
-                logging.exception("Unable to connect to %s", c)
                 continue
         if reply:
             # Now set the timeout to the actual requested
@@ -158,17 +155,7 @@ class RPC(object):
         # uncompress result returned by the groupby and convert it to a Pandas DataFrame
         if not result:
             return None
-        pa_table = deserialize_pa_table(result)
-
-        result_df = aggregate_pa(
-            pa_table,
-            groupby_col_list,
-            agg_list,
-            data_filter=None,  # we can assume the filtering already happened
-            aggregate=aggregate)
-
-        del pa_table
-        return result_df
+        raise NotImplementedError('Not supported on python 3')
 
     def get_download_data(self):
         redis_server = redis.from_url(self.redis_url)

@@ -1,7 +1,7 @@
 version: 2.1
 orbs:
   aws-cli: circleci/aws-cli@3.1
-  codeartifact: visualfabriq/codeartifact@1.0.0
+  codeartifact: visualfabriq/codeartifact@1.1.1
 
 parameters:
   workingdir:
@@ -74,37 +74,18 @@ jobs:
       - checkout
       - codeartifact/init:
           tool: pip
+      - when:
+          condition: << parameters.is-pre-release >>
+          steps:
+            - codeartifact/pre_release_version:
+                package: parqueryd
       - run:
           name: Build
           command: |
-            if [[ "<< parameters.is-pre-release >>" == true ]]; then
-              DEV_VERSION=$((16#${CIRCLE_SHA1:0:6}))
-              export PRE_RELEASE_VERSION=".dev${DEV_VERSION}"
-            fi
             pip install build
             python -m build
       - codeartifact/push:
           tool: twine
-
-  deploy-dqe:
-    executor: vf-dqe-executor
-    parameters:
-      region:
-        type: string
-    environment:
-      AWS_REGION: <<parameters.region>>
-      DOCUMENT_NAME: Deploy-dqe
-      SERVICE_NAME: DQE
-    steps:
-      - checkout
-      - aws-cli/setup:
-          profile-name: default
-      - run:
-          name: Deploy Parqueryd server
-          command: |
-            stty rows 64 cols 306
-            ./deployment/deploy.sh
-
 
 workflows:
   version: 2.1
@@ -112,19 +93,19 @@ workflows:
     jobs:
       - test:
           context: codeartifact-dev
-          name: py2
-          runtime: "2.7"
+          name: py37
+          runtime: "3.7"
 
       - test:
           context: codeartifact-dev
-          name: py3
-          runtime: "3.7"
+          name: py310
+          runtime: "3.10"
 
       - build-and-push:
           context: codeartifact-dev
           requires:
-            - py2
-            - py3
+            - py37
+            - py310
           filters:
             branches:
               only:
@@ -134,8 +115,8 @@ workflows:
       - build-and-push:
           context: codeartifact-dev
           requires:
-            - py2
-            - py3
+            - py37
+            - py310
           is-pre-release: true
           filters:
             branches:
@@ -146,16 +127,6 @@ workflows:
     jobs:
       - test:
           context: codeartifact-dev
-          name: py2
-          runtime: "2.7"
-          filters:
-            branches:
-              only:
-                - master
-                - main
-
-      - test:
-          context: codeartifact-dev
           name: py3
           runtime: "3.7"
           filters:
@@ -163,59 +134,3 @@ workflows:
               only:
                 - master
                 - main
-
-      - approve:
-          name: Approve Deploy to Europe
-          context: vf-deploy-dqe-prod
-          type: approval
-          requires:
-            - py2
-            - py3
-      - deploy-dqe:
-          name: Deploy to Europe
-          context: vf-deploy-dqe-prod
-          requires:
-            - Approve Deploy to Europe
-          region: eu-west-1
-
-      - approve:
-          name: Approve Deploy to USA
-          context: vf-deploy-dqe-prod
-          type: approval
-          requires:
-            - py2
-            - py3
-      - deploy-dqe:
-          name: Deploy to USA
-          context: vf-deploy-dqe-prod
-          requires:
-            - Approve Deploy to USA
-          region: us-east-1
-
-      - approve:
-          name: Approve Deploy to South America
-          context: vf-deploy-dqe-prod
-          type: approval
-          requires:
-            - py2
-            - py3
-      - deploy-dqe:
-          name: Deploy to South America
-          context: vf-deploy-dqe-prod
-          requires:
-            - Approve Deploy to South America
-          region: sa-east-1
-
-      - approve:
-          name: Approve Deploy to Asia
-          context: vf-deploy-dqe-prod
-          type: approval
-          requires:
-            - py2
-            - py3
-      - deploy-dqe:
-          name: Deploy to Asia
-          context: vf-deploy-dqe-prod
-          requires:
-            - Approve Deploy to Asia
-          region: ap-northeast-1
