@@ -37,7 +37,7 @@ install_requires = [
     'boto3>=1.17.95',
     'configobj>=5.0.6',
     'netifaces>=0.10.9',
-    'numpy>=2',
+    'numpy',
     'pyarrow>=1.0.0',
     'pandas~=2.2.2',
     'parquery==1.1.2.dev2', # TODO: update version
