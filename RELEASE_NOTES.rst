@@ -1,6 +1,6 @@
 Release 1.1.0
 =======================
-- Remove python 3.7 support and add 3.11
+- Remove python 3.7 pipeline and add 3.11 support
 
 Release 1.0.0
 =======================
