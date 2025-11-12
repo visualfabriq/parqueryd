@@ -1,4 +1,5 @@
-from parqueryd.exceptions import RPCError, RetriesExceededError, MissingDimensionError
+from parqueryd.exceptions import MissingDimensionError, RetriesExceededError, RPCError
+
 
 def test_RPCError():
     e = RPCError("Something happened")
@@ -7,10 +8,12 @@ def test_RPCError():
     e = RPCError()
     assert str(e) == "RPCError: There was an exception when performing the RPC action"
 
+
 def test_RetriesExceededError():
     e = RetriesExceededError(5)
     assert e.max_retries == 5
     assert str(e) == "No response from DQE, retries 5 exceeded"
+
 
 def test_MissingDimensionError():
     e = MissingDimensionError(10)

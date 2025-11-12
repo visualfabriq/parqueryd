@@ -1,3 +1,10 @@
+Release 2.0.0
+=======================
+- Move to Parquery 2.0.2
+- Add Typing & Annotations
+- Ruffian formatting
+- Removed need for Pandas & Numpy (except tests)
+
 Release 1.1.0
 =======================
 - Remove python 3.7 pipeline and add 3.11 support

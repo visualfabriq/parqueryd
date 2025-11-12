@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 ########################################################################
 #
 # License: MIT
@@ -10,15 +8,13 @@ from __future__ import absolute_import
 import codecs
 import os
 
-from setuptools import setup, find_packages
-from sys import version_info as v
+from setuptools import find_packages, setup
 
 # Check this Python version is supported
-if v < (3, 7):
-    raise Exception("Unsupported Python version %d.%d. Requires Python >= 3.7" % v[:2])
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+
 
 def read(*parts):
     """
@@ -33,67 +29,60 @@ def read(*parts):
 cmdclass = {}
 
 install_requires = [
-    'azure-storage-blob>=12.4.0',
-    'boto3>=1.17.95',
-    'configobj>=5.0.6',
-    'netifaces>=0.10.9',
-    'numpy',
-    'pyarrow>=1.0.0',
-    'pandas<=1.1.5;python_version<"3.11"',
-    'pandas>=1.5.3;python_version>="3.11"',
-    'parquery>=1.2.0',
-    'psutil>=5.7.2',
-    'pyzmq==25.1.2',
-    'redis>=3.5',
+    "azure-storage-blob>=12.4.0",
+    "boto3>=1.17.95",
+    "configobj>=5.0.6",
+    "netifaces>=0.10.9",
+    "parquery==2.0.2",
+    "psutil>=5.7.2",
+    "pyzmq==25.1.2",
+    "redis>=3.5",
     "sentry-sdk",
-    'smart-open>=1.11.1'
+    "smart-open>=1.11.1",
 ]
 setup_requires = []
 tests_requires = [
-    'pytest>=4.6.11',
-    'pytest-cov>=2.10.0',
-    'codacy-coverage>=1.3.11',
-    'moto',
+    "pytest>=4.6.11",
+    "pytest-cov>=2.10.0",
+    "codacy-coverage>=1.3.11",
+    "moto",
+    "numpy",
+    "pandas>=1.5.3",
 ]
-dev_requires = [
-    "ipython>=7.20"
-]
-extras_requires = {
-    'all': tests_requires + dev_requires,
-    'test': tests_requires,
-    'dev': dev_requires
-}
+dev_requires = ["ipython>=7.20", "ruff>=0.8.0"]
+extras_requires = {"all": tests_requires + dev_requires, "test": tests_requires, "dev": dev_requires}
 ext_modules = []
 package_data = {}
 classifiers = [
-    'Development Status :: 5 - Production/Stable',
-    'Intended Audience :: Developers',
-    'Intended Audience :: Information Technology',
-    'Intended Audience :: Science/Research',
-    'License :: OSI Approved :: BSD License',
-    'Programming Language :: Python',
-    'Topic :: Software Development :: Libraries :: Python Modules',
-    'Operating System :: Microsoft :: Windows',
-    'Operating System :: Unix',
-    'Programming Language :: Python',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.7',
-    'Programming Language :: Python :: 3.11',
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 
 setup(
     name="parqueryd",
-    description='A distribution framework for parquery',
+    description="A distribution framework for parquery",
     long_description=read("README.md"),
-    long_description_content_type='text/markdown',
+    long_description_content_type="text/markdown",
     classifiers=classifiers,
-    author='Carst Vaartjes',
-    author_email='cvaartjes@visualfabriq.com',
-    maintainer='Jelle Verstraaten',
-    maintainer_email='jverstraaten@visualfabriq.com',
-    url='https://github.com/visualfabriq/parqueryd',
-    license='GPL2',
-    platforms=['any'],
+    author="Carst Vaartjes",
+    author_email="cvaartjes@visualfabriq.com",
+    maintainer="Jelle Verstraaten",
+    maintainer_email="jverstraaten@visualfabriq.com",
+    url="https://github.com/visualfabriq/parqueryd",
+    license="GPL2",
+    platforms=["any"],
     ext_modules=ext_modules,
     cmdclass=cmdclass,
     install_requires=install_requires,
@@ -105,10 +94,9 @@ setup(
     include_package_data=True,
     zip_safe=True,
     entry_points={
-        'console_scripts': [
-            'parqueryd = parqueryd.node:main',
-            'parqueryd_local = parqueryd.connect_local:main',
+        "console_scripts": [
+            "parqueryd = parqueryd.node:main",
+            "parqueryd_local = parqueryd.connect_local:main",
         ]
-    }
+    },
 )
-
