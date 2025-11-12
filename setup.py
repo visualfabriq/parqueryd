@@ -44,6 +44,7 @@ setup_requires = []
 tests_requires = [
     "pytest>=4.6.11",
     "pytest-cov>=2.10.0",
+    "coverage>=5.0",
     "codacy-coverage>=1.3.11",
     "moto",
     "numpy",
