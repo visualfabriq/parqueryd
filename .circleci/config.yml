@@ -48,6 +48,10 @@ jobs:
           tool: pip
 
       - run:
+          name: Configure env var pip index url
+          command: echo "export PIP_INDEX_URL=$(pip config get global.index-url)" >> $BASH_ENV
+
+      - run:
           name: Install dependencies with uv
           command: |
             source ~/venv/bin/activate
@@ -114,6 +118,11 @@ jobs:
 
       - codeartifact/init:
           tool: pip
+
+      - run:
+          name: Configure env var pip index url
+          command: echo "export PIP_INDEX_URL=$(pip config get global.index-url)" >> $BASH_ENV
+
       - when:
           condition: << parameters.is-pre-release >>
           steps:
@@ -122,7 +131,7 @@ jobs:
       - run:
           name: Build
           command: |
-            uv pip install --system build
+            uv pip install --system --index-url $PIP_INDEX_URL build
             python -m build
       - codeartifact/push:
           tool: twine
