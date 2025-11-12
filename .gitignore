@@ -94,3 +94,6 @@ ENV/
 .vscode
 
 .idea
+
+# Serena agent memory files
+.serena/

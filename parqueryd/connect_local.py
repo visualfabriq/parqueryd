@@ -1,17 +1,19 @@
+from __future__ import annotations
+
 import argparse
 import logging
 
-import IPython
-
 import configobj
+import IPython
 
 from parqueryd.rpc import RPC
 
-def main():
-    parser = argparse.ArgumentParser(description='Start parqueryd worker.')
-    parser.add_argument("--url", help='Controller URL to connect to')
-    parser.add_argument("-v", "--verbosity", action="count",
-                        help="Increase output verbosity")
+
+def main() -> None:
+    """Main entry point for local parqueryd connection."""
+    parser = argparse.ArgumentParser(description="Start parqueryd worker.")
+    parser.add_argument("--url", help="Controller URL to connect to")
+    parser.add_argument("-v", "--verbosity", action="count", help="Increase output verbosity")
     args = parser.parse_args()
 
     if args.verbosity == 3:
@@ -23,19 +25,20 @@ def main():
     else:
         loglevel = logging.ERROR
 
-    config = configobj.ConfigObj('/etc/parqueryd.cfg')
-    redis_url = config.get('redis_url', 'redis://127.0.0.1:6379/0')
+    config = configobj.ConfigObj("/etc/parqueryd.cfg")
+    redis_url: str = config.get("redis_url", "redis://127.0.0.1:6379/0")
 
     if args.url:
-        if not args.url.startswith('tcp:'):
-            print('URL must start with `tcp:`')
+        if not args.url.startswith("tcp:"):
+            print("URL must start with `tcp:`")
             return
-        rpc = RPC(address=args.url, redis_url=redis_url, loglevel=loglevel)
+        RPC(address=args.url, redis_url=redis_url, loglevel=loglevel)
 
     else:
-        rpc = RPC(redis_url=redis_url, loglevel=loglevel)
+        RPC(redis_url=redis_url, loglevel=loglevel)
 
     IPython.embed()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

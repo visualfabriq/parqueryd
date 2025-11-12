@@ -1,13 +1,17 @@
-import os
-import logging
+from __future__ import annotations
 
-pre_release_version = os.getenv('PRE_RELEASE_VERSION', '')
-__version__ = pre_release_version if pre_release_version else '1.1.0'
+import logging
+import os
+
+pre_release_version: str = os.getenv("PRE_RELEASE_VERSION", "")
+__version__: str = pre_release_version if pre_release_version else "2.0.0"
 
 # initalize logger
-logger = logging.getLogger('parqueryd')
-ch = logging.StreamHandler()
-formatter = logging.Formatter('%(levelname)s %(asctime)s %(name)s %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
+logger: logging.Logger = logging.getLogger("parqueryd")
+ch: logging.StreamHandler = logging.StreamHandler()
+formatter: logging.Formatter = logging.Formatter(
+    "%(levelname)s %(asctime)s %(name)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
