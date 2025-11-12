@@ -51,7 +51,7 @@ jobs:
           name: Install dependencies with uv
           command: |
             source ~/venv/bin/activate
-            uv pip install .[test]
+            uv pip install --index-url $PIP_INDEX_URL .[test]
 
       # Save the cached dependencies
       - save_cache:
