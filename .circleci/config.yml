@@ -26,7 +26,11 @@ jobs:
 
     working_directory: ~/parqueryd
     steps:
-      - checkout
+      - run:
+          name: Checkout code via HTTPS
+          command: |
+            git clone https://github.com/visualfabriq/parqueryd.git .
+            git checkout $CIRCLE_BRANCH
 
       - run:
           name: Install uv
@@ -103,7 +107,11 @@ jobs:
         type: boolean
         default: false
     steps:
-      - checkout
+      - run:
+          name: Checkout code via HTTPS
+          command: |
+            git clone https://github.com/visualfabriq/parqueryd.git .
+            git checkout $CIRCLE_BRANCH
 
       - run:
           name: Install uv
