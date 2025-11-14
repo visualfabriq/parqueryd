@@ -1,5 +1,9 @@
 Release 2.0.0
 =======================
+- Move to Parquery 2.0.6
+
+Release 2.0.0
+=======================
 - Move to Parquery 2.0.2
 - Add Typing & Annotations
 - Ruffian formatting

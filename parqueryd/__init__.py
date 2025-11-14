@@ -4,7 +4,7 @@ import logging
 import os
 
 pre_release_version: str = os.getenv("PRE_RELEASE_VERSION", "")
-__version__: str = pre_release_version if pre_release_version else "2.0.0"
+__version__: str = pre_release_version if pre_release_version else "2.0.1"
 
 # initalize logger
 logger: logging.Logger = logging.getLogger("parqueryd")

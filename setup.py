@@ -33,7 +33,7 @@ install_requires = [
     "boto3>=1.17.95",
     "configobj>=5.0.6",
     "netifaces>=0.10.9",
-    "parquery==2.0.2",
+    "parquery==2.0.6",
     "psutil>=5.7.2",
     "pyzmq==25.1.2",
     "redis>=3.5",
