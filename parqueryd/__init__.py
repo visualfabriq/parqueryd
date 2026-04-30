@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import logging
-import os
+from importlib.metadata import version as _pkg_version
 
-pre_release_version: str = os.getenv("PRE_RELEASE_VERSION", "")
-__version__: str = pre_release_version if pre_release_version else "2.0.1"
+__version__: str = _pkg_version("parqueryd")
 
 # initalize logger
 logger: logging.Logger = logging.getLogger("parqueryd")
